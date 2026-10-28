@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ueh-mesa-prototype"
+version = "0.1.0"
+description = "Port estructural del simulador operacional de urgencias a Mesa"
+requires-python = ">=3.12"
+dependencies = [
+    "mesa==3.5.1",
+    "networkx>=3.0",
+    "numpy>=1.26,<3",
+    "openpyxl>=3.1.5",
+    "pandas>=2.2,<3",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+api = ["fastapi>=0.115,<1", "pydantic>=2.7,<3", "uvicorn[standard]>=0.30,<1"]
+web = ["streamlit>=1.40,<2"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

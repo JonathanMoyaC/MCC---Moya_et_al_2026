@@ -1,0 +1,64 @@
+{
+  "title": "Paso 9: empaquetado Docker y preparación de despliegue privado",
+  "status": "api_and_streamlit_implemented_container_build_and_server_deployment_pending",
+  "runtime": {
+    "python": "3.12",
+    "reason": "Mesa 3.5.1 requires Python >=3.12; project metadata is aligned.",
+    "dependency_lock": "uv.lock",
+    "locked_package_count": 63
+  },
+  "components": {
+    "api": "FastAPI: health, version and aggregate simulation endpoints",
+    "interface": "Streamlit scenario form, 1-10 sequential replications, summary indicators, charts and aggregate JSON download",
+    "engine": "Mesa 3.5.1"
+  },
+  "container": {
+    "dockerfile": "Dockerfile",
+    "compose_file": "compose.yaml",
+    "build_context": "mesa_prototype",
+    "includes": [
+      "Mesa API source",
+      "Streamlit interface",
+      "Fase 2 aggregate profiles"
+    ],
+    "excludes": [
+      "source Excel workbooks",
+      "restricted calibration cache",
+      "serialized ML artifacts"
+    ],
+    "calibration_cache_delivery": "Docker Compose secret mounted read-only from approved host path",
+    "port_bindings": {
+      "api": "127.0.0.1:8000",
+      "web": "127.0.0.1:8501"
+    },
+    "runtime_user": "non-root",
+    "root_filesystem": "read-only",
+    "privileges": "all Linux capabilities dropped; no-new-privileges enabled"
+  },
+  "validation": {
+    "dependency_lock_resolved": true,
+    "source_tests_passed": 30,
+    "streamlit_render_test": "passed",
+    "ui_to_api_to_mesa_smoke_test": {
+      "result": "passed",
+      "simulation_window": "2018-01-01, 24 hours, seed 42, replication 0",
+      "arrivals": 339,
+      "completed": 339,
+      "replication_count_supported": "1-10",
+      "summary_metrics_displayed": true,
+      "percentile_aggregation": "mean of per-replication percentiles; no pooling of patient rows",
+      "aggregate_json_download_available": true,
+      "patient_ids_returned": false,
+      "esi_model_applied": false
+    },
+    "docker_build": "not run; Docker is unavailable in the authoring environment",
+    "private_server_deployment": "not run; no target server was provided",
+    "phase6_holdout": "Exploratory 2018 holdout reveals base capacity mismatch; deployment remains gated on resolving this validation finding."
+  },
+  "remaining_before_deployment": [
+    "Build and run the image with Docker Compose on a Docker host.",
+    "Verify container health, API, UI, resource use and shutdown behavior.",
+    "Place the services behind an authenticated TLS reverse proxy for remote private access.",
+    "Test rollback to the previous image before pilot use."
+  ]
+}

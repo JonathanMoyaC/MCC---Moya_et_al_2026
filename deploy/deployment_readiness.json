@@ -1,0 +1,41 @@
+{
+  "title": "Fase 7: preparación y readiness de Docker/despliegue privado",
+  "status": "host_build_and_deployment_blocked",
+  "date": "2026-10-23",
+  "checks": {
+    "docker_engine_available": false,
+    "docker_compose_available": false,
+    "podman_or_alternative_available": false,
+    "compose_yaml_parse_and_structural_security_checks": "passed",
+    "preflight_shell_syntax": "passed",
+    "preflight_cache_check": "blocked_world_readable_permissions",
+    "automated_tests": "30 passed",
+    "uv_lock_check": "passed",
+    "container_image_built": false,
+    "private_server_deployment": false
+  },
+  "cache_permissions_observed": {
+    "mode_octal": "0644",
+    "world_readable": true,
+    "permissions_changed": false
+  },
+  "implemented": [
+    "Versioned image tag parameter UEH_IMAGE_TAG with rollback procedure.",
+    "Deployment runbook for private Linux host, health checks, authenticated TLS proxy, smoke test and rollback.",
+    "Preflight script validates approved cache SHA-256, cache location outside build context, restrictive permissions and Docker Compose configuration.",
+    "Compose services remain bound to loopback; containers run read-only, non-root, with capabilities dropped and no-new-privileges."
+  ],
+  "remaining": [
+    "Restrict the approved host cache so container UID/GID 10001 can read it without granting access to other host users.",
+    "Run preflight, build and start both services on a host with Docker Engine and Compose v2.",
+    "Verify cache readability from the running container and test both health endpoints and a UI-to-API-to-Mesa simulation.",
+    "Review resource use and logs on the target host.",
+    "Configure the real TLS/authenticated reverse proxy, firewall and rollback target.",
+    "Complete phase 6 validation before opening deployment to pilot users."
+  ],
+  "artifacts": [
+    "deploy/README.md",
+    "scripts/deploy_preflight.sh",
+    "compose.yaml"
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "title": "Step 8 pretrained ESI model inventory and input-contract audit",
+  "audit_date": "2026-10-23",
+  "selected_candidate": {
+    "model_version": "prioria_esi_triage_v1.0",
+    "model": "LightGBM",
+    "model_artifact": "prioria_esi_triage_v1.0_lightgbm_tuned.joblib",
+    "metadata_file": "prioria_esi_triage_v1.0_lightgbm_metadata.json",
+    "artifact_size_bytes": 7281111,
+    "artifact_sha256_computed": "b5d449a6b7e1f9faadabe5599a834c4b4b8cb825caa8d83c484442da7b020943",
+    "metadata_sha256": "f953c3c2c529008c2cf8fde296811eb0a15954ed83a9055631c9b02562a63c38",
+    "artifact_hash_declared_in_metadata": false,
+    "created_utc": "2026-10-20T16:50:48.129071+00:00",
+    "target": "niv_cod",
+    "class_to_int": {
+      "C1": 0,
+      "C2": 1,
+      "C3": 2,
+      "C4": 3,
+      "C5": 4
+    },
+    "selection_rule": "validation macro_f1; tie-break val_recall_C1_C2_mean, val_balanced_accuracy",
+    "optimization": {
+      "method": "RandomizedSearchCV",
+      "scoring": "f1_macro",
+      "n_iter": 12,
+      "cv_splits": 3,
+      "best_cv_macro_f1": 0.4952401070843531,
+      "best_params": {
+        "model__subsample": 1.0,
+        "model__num_leaves": 15,
+        "model__n_estimators": 800,
+        "model__min_child_samples": 50,
+        "model__max_depth": 8,
+        "model__learning_rate": 0.06,
+        "model__colsample_bytree": 0.7,
+        "model__class_weight": "balanced"
+      }
+    },
+    "validation_metrics": {
+      "modelo": "LightGBM",
+      "cv_macro_f1": 0.4952401070843531,
+      "cv_macro_f1_sd": 0.0139812485088332,
+      "val_accuracy": 0.695050505050505,
+      "val_balanced_accuracy": 0.5039369806231098,
+      "val_macro_f1": 0.5056506489126589,
+      "val_recall_C1_C2_mean": 0.5885039713621861,
+      "val_recall_C1": 0.381294964028777,
+      "val_recall_C2": 0.7957129786955953,
+      "val_recall_C3": 0.6545454545454545,
+      "val_recall_C4": 0.5998962117280747,
+      "val_recall_C5": 0.08823529411764706
+    },
+    "test_metrics": {
+      "accuracy": 0.6923232323232323,
+      "balanced_accuracy": 0.5198580827962667,
+      "macro_f1": 0.5109588023663288,
+      "recall_C1_C2_mean": 0.62663327997231,
+      "recall_C1": 0.45977011494252873,
+      "recall_C2": 0.7934964450020912,
+      "recall_C3": 0.6453474197480699,
+      "recall_C4": 0.6234952262349522,
+      "recall_C5": 0.07718120805369127
+    },
+    "recorded_versions": {
+      "python": "3.13.16",
+      "sklearn": "1.6.1",
+      "xgboost": "3.4.1",
+      "lightgbm": "4.6.0",
+      "catboost": "1.2.10"
+    },
+    "training_source_declared_in_metadata": false
+  },
+  "input_contract": {
+    "required_feature_count": 769,
+    "non_embedding_features": [
+      "AÑO"
+    ],
+    "embedding_feature_count": 768,
+    "embedding_sequence_complete_000_to_767": true,
+    "current_synthetic_generator_fields": [
+      "patient_id",
+      "arrival_time",
+      "triage_observed"
+    ],
+    "model_version": "prioria_esi_triage_v1.0",
+    "selected_model": "LightGBM",
+    "target": "niv_cod",
+    "available_feature_count": 3,
+    "missing_feature_count": 769,
+    "missing_feature_preview": [
+      "AÑO",
+      "beto_clinico_000",
+      "beto_clinico_001",
+      "beto_clinico_002",
+      "beto_clinico_003",
+      "beto_clinico_004",
+      "beto_clinico_005",
+      "beto_clinico_006",
+      "beto_clinico_007",
+      "beto_clinico_008"
+    ],
+    "missing_feature_groups": {
+      "AÑO": 1,
+      "beto_clinico_*": 768
+    },
+    "class_mapping_valid": true,
+    "classes": [
+      "C1",
+      "C2",
+      "C3",
+      "C4",
+      "C5"
+    ],
+    "compatible": false
+  },
+  "decision": {
+    "use_this_recently_validated_esi_version_as_canonical_candidate": true,
+    "integrate_inference_now": false,
+    "reason": "All 769 model inputs are absent from the generated cohort. The profile sampler generates category from historical aggregate proportions; it does not generate source clinical text, BETO embeddings, or AÑO. No proxy features will be fabricated.",
+    "required_before_inference": "Specify and validate how synthetic clinical narrative and AÑO are generated, reproduce the exact BETO-CLINICAL-ES embedding pipeline and its tokenizer/version, then test model load, input order, output class decoding, and calibration in the pinned runtime.",
+    "older_xgboost_artifacts": "Not selected, following the user’s instruction to use the recently validated ESI version."
+  },
+  "provenance_limitations": [
+    "The sidecar records validation and test metrics but does not record a hash for the joblib artifact or the training data source.",
+    "The serialized joblib was not deserialized or used for prediction in this audit; the feature contract already fails against the current synthetic cohort.",
+    "Reported test metrics are copied from the artifact metadata and were not independently recomputed here."
+  ],
+  "privacy": "No source patient rows, clinical text, or identifiers are included."
+}

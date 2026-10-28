@@ -1,0 +1,61 @@
+{
+  "title": "Fase 2 demand sampler integration check",
+  "status": "implemented_and_smoke_tested",
+  "source_rebuild": {
+    "method": "Regenerated with generate_phase2_profiles.py from the three attached workbooks using only four aggregate input fields: urg_fecha_hora, tri_fecha_hora, urg_fecha_egreso, niv_cod.",
+    "all_profile_outputs_equal_existing": true,
+    "source_workbooks": [
+      {
+        "file": "01-Unificado2016_01-05-2025.xlsx",
+        "sha256": "ca17cd78242b016c0e0922572fdc23d6acc2350ae05f4715162cd9bbbe24a0e3"
+      },
+      {
+        "file": "02-Unificado2018_19-04-2025.xlsx",
+        "sha256": "ba8b8dc9eb87e3c3ff0e1a57e6f4cbc5ad85cf5de51438afc4ca87fad39d9128"
+      },
+      {
+        "file": "03-Unificado2017_19-04-2025.xlsx",
+        "sha256": "da3845066fa68903ccaac87fda14320966925209759ecc49e7796c6dd4a33815"
+      }
+    ],
+    "profile_outputs_sha256": {
+      "hourly_arrival_severity_profile.csv": "92f403892bd0795560514e5253d0653fbd75673633ff4350774ca61adb661f31",
+      "observed_interval_quantiles.csv": "3960939cbdd7cfda611951872f6221e36f350f143ee607959403efac0eb077ad",
+      "temporal_quality_summary.csv": "02bb156123a966f626b389fdad53957ca0a103be7ba50129fb5f622460ce5740",
+      "annual_volume_summary.csv": "f7b25b6cb88abaedf3c24a2d6be0d96fc9af29c47567bd34df0921dd01e08fb9",
+      "source_aggregate_counts.json": "15270c5089d3255535a8f09885a53e9135be88d4fc4b41aede1cf340a1779756",
+      "profile_metadata.json": "6366e5a5c7e8b1bc6df55eb63865d40af645b035e30929d24d2854100542542a"
+    },
+    "profile_strata": 576,
+    "profiled_c1_c5_rows": 359253
+  },
+  "sampler": {
+    "module": "ueh_mesa.demand",
+    "count_model": "Poisson per comparable calendar-day hour (assumption; requires empirical validation)",
+    "within_hour_model": "Uniform over integer minutes 0-59 (assumption; requires empirical validation)",
+    "severity_default": "Smoothed C1-C5 proportions from the selected month/day-type/hour cell",
+    "reproducibility": "Seeded independently by master_seed, replication_id, hour key, and stream; stable synthetic patient IDs.",
+    "source_rows_or_identifiers_in_generated_cohort": false
+  },
+  "mesa_smoke_test": {
+    "start": "2018-01-01T00:00:00",
+    "horizon_hours": 24,
+    "master_seed": 42,
+    "replication_id": 0,
+    "synthetic_arrivals": 339,
+    "completed_patients": 339,
+    "minute_series_rows": 2454,
+    "incomplete_patients": 0
+  },
+  "automated_tests": {
+    "passed": 23,
+    "failed": 0
+  },
+  "limitations": [
+    "Pooled 2016-2018 historical demand grew 42.9% across the observed years; current-demand validity is not established.",
+    "Poisson hourly counts and uniform minute placement are explicit assumptions, not observed empirical facts.",
+    "Severity is sampled from aggregate historical proportions; no pre-trained ESI classifier is invoked because its synthetic input contract has not yet been validated.",
+    "Observed arrival-to-triage and arrival-to-discharge intervals are not treated as pure service durations."
+  ],
+  "privacy": "This report contains aggregate counts and file hashes only; no patient-level rows or identifiers."
+}
