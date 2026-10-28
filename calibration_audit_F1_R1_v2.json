@@ -1,0 +1,26 @@
+{
+  "source": "F3.1/H.1-R6 empirical input model",
+  "reference_notebook_drive_id": "1cpm1IFL7ZwpGpJk8J0Tq8Godx89cy9WO",
+  "reference_notebook_sha256": "b64cb3392be0808217cd0c03e2d0ccad7a0a2f488cb21a5369194c1ea43ce561",
+  "cache_sha256": "5edef6b238a0723954b3c678d6b8192a3af672afb227245332daa58ad2a74cea",
+  "calibration_start": "2017-09-18T00:00:00",
+  "calibration_end": "2017-09-20T23:59:59",
+  "calibration_window_rows": 506,
+  "quality_valid": 506,
+  "quality_review_extreme": 0,
+  "quality_exclude_missing": 0,
+  "quality_exclude_order": 0,
+  "eligible_attention_global": 482,
+  "attention_by_class_counts": {
+    "C1": 4,
+    "C2": 204,
+    "C3": 240,
+    "C4": 29,
+    "C5": 5
+  },
+  "attention_class_threshold": 30,
+  "registration_sample_count": 75,
+  "triage_sample_count": 79,
+  "attention_global_min": 1.0,
+  "attention_global_max": 682.0
+}

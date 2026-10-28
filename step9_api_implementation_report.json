@@ -1,0 +1,58 @@
+{
+  "title": "Paso 9: servicio de simulación Mesa mediante API",
+  "status": "api_service_and_streamlit_ui_implemented_and_smoke_tested",
+  "api": {
+    "module": "ueh_mesa.api",
+    "framework": "FastAPI",
+    "version": "0.1.0",
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/health"
+      },
+      {
+        "method": "GET",
+        "path": "/v1/version"
+      },
+      {
+        "method": "POST",
+        "path": "/v1/simulations"
+      }
+    ],
+    "maximum_horizon_hours": 168,
+    "returns_patient_level_rows": false
+  },
+  "service": {
+    "module": "ueh_mesa.service",
+    "engine": "Mesa",
+    "runtime_inputs": [
+      "UEH_ARRIVAL_PROFILE_PATH",
+      "UEH_CALIBRATION_CACHE_PATH"
+    ],
+    "response_indicators": [
+      "arrival and completion counts",
+      "severity counts C1-C5",
+      "wait, door-to-doctor, attention and length-of-stay mean/median/p90/p95",
+      "queue mean and maximum",
+      "mean resource utilization"
+    ],
+    "esi_model_applied": false,
+    "severity_source": "historical aggregate probabilities",
+    "arrival_assumptions_explicit": true
+  },
+  "validation": {
+    "automated_tests_passed": 30,
+    "service_integration": "tested against Mesa with a synthetic one-hour profile",
+    "zero_arrival_case": "tested",
+    "http_server_smoke_test": "passed with Uvicorn; health, version and 24-hour Mesa simulation returned HTTP 200",
+    "streamlit_ui": "rendered and exercised through AppTest against the live API; supports 1-10 sequential replications, aggregate indicators and JSON download",
+    "source_workbooks_or_calibration_cache_bundled": false,
+    "reproducibility": "same request and seed return identical aggregate output; changed seed changes synthetic arrivals",
+    "holdout_2018": "exploratory 4-window check completed; capacity review required; summary at validation/phase6_validation_summary.json"
+  },
+  "known_limits": [
+    "The pretrained ESI LightGBM model is inventoried but not invoked because its 769-feature contract is unavailable from synthetic arrivals.",
+    "The API still requires deployment to install the api extra and mount the restricted calibration cache at runtime.",
+    "Poisson hourly arrival counts and uniform within-hour placement remain simulation assumptions that need empirical validation."
+  ]
+}

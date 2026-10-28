@@ -1,0 +1,67 @@
+services:
+  api:
+    build:
+      context: .
+    image: ueh-mesa-api:${UEH_IMAGE_TAG:-0.1.0}
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      UEH_ARRIVAL_PROFILE_PATH: /app/fase2_profiles/hourly_arrival_severity_profile.csv
+      UEH_CALIBRATION_CACHE_PATH: /run/secrets/calibration_cache
+    secrets:
+      - source: calibration_cache
+        target: calibration_cache
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+    image: ueh-mesa-api:${UEH_IMAGE_TAG:-0.1.0}
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8501:8501"
+    environment:
+      UEH_API_BASE_URL: http://api:8000
+      HOME: /tmp
+      STREAMLIT_BROWSER_GATHER_USAGE_STATS: "false"
+    command:
+      - /app/.venv/bin/streamlit
+      - run
+      - /app/app.py
+      - --server.address=0.0.0.0
+      - --server.port=8501
+      - --server.headless=true
+      - --browser.gatherUsageStats=false
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8501/_stcore/health', timeout=3)
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    restart: unless-stopped
+
+secrets:
+  calibration_cache:
+    file: ${UEH_CALIBRATION_CACHE_HOST_PATH:?Set UEH_CALIBRATION_CACHE_HOST_PATH to the approved F3 calibration cache}

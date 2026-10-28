@@ -1,0 +1,299 @@
+{
+  "title": "Patient-level equivalence check for Mesa port, H.6 replication 63",
+  "status": "exact_for_available_patient_event_outputs",
+  "reference": "H.1-R6 checkpoints in H.6 checkpoint folder",
+  "configuration": {
+    "master_seed": 42,
+    "replication_id": 63,
+    "mesa_version": "3.5.1",
+    "windows_simulated_independently": true,
+    "patient_window_rows_per_branch": 3948
+  },
+  "calibration_cache_sha256": "5edef6b238a0723954b3c678d6b8192a3af672afb227245332daa58ad2a74cea",
+  "branches": {
+    "empirical": {
+      "replication_id": 63,
+      "patient_window_rows": 3948,
+      "windows": {
+        "W1_20180101_20180106": 950,
+        "W2_20180501_20180506": 989,
+        "W3_20180829_20180903": 990,
+        "W4_20181227_20190101": 1019
+      },
+      "category_fields_equal_rows": {
+        "triage_observed": {
+          "equal_rows": 3948,
+          "rows": 3948
+        },
+        "triage_assigned": {
+          "equal_rows": 3948,
+          "rows": 3948
+        }
+      },
+      "event_mark_fields": {
+        "arrival_minute": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "registration_start": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "registration_end": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "triage_start": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "triage_end": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "attention_start": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "doctor_release": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "box_release": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "departure_minute": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        }
+      },
+      "kpi_fields": {
+        "wait_triage_sim": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "wait_attention_sim": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "door2doctor_sim": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "attention_time_sim": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "doctor_contact_sim": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "box_occupation_sim": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "los_sim": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        }
+      },
+      "h1_reference_sha256": "9a1b1e2f4469b6495f3435e2085080940815136fb4130f5473151dcc8b1bda8c",
+      "h6_assignment_sha256": "22a66f2e27eb31ab6f2dfabd7cfd65aecb76d9a383a0411d03b5942a3b928475",
+      "exact_equivalence": true
+    },
+    "hierarchical": {
+      "replication_id": 63,
+      "patient_window_rows": 3948,
+      "windows": {
+        "W1_20180101_20180106": 950,
+        "W2_20180501_20180506": 989,
+        "W3_20180829_20180903": 990,
+        "W4_20181227_20190101": 1019
+      },
+      "category_fields_equal_rows": {
+        "triage_observed": {
+          "equal_rows": 3948,
+          "rows": 3948
+        },
+        "triage_assigned": {
+          "equal_rows": 3948,
+          "rows": 3948
+        }
+      },
+      "event_mark_fields": {
+        "arrival_minute": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "registration_start": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "registration_end": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "triage_start": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "triage_end": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "attention_start": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "doctor_release": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "box_release": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "departure_minute": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        }
+      },
+      "kpi_fields": {
+        "wait_triage_sim": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "wait_attention_sim": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "door2doctor_sim": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "attention_time_sim": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "doctor_contact_sim": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "box_occupation_sim": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        },
+        "los_sim": {
+          "equal_rows": 3948,
+          "rows": 3948,
+          "mean_absolute_error": 0.0,
+          "p95_absolute_error": 0.0,
+          "max_absolute_error": 0.0
+        }
+      },
+      "h1_reference_sha256": "74da01b6cd27dccd94a9fd34eb22eebd495f1e03b9cda7ba9bca5944d9d49d69",
+      "h6_assignment_sha256": "c093cea3a3c7aca20e9664f42e9087e8e1c5e5aa9ebc8d8eff42fcbc20629561",
+      "exact_equivalence": true
+    }
+  },
+  "scope_limitations": [
+    "The verified H.1-R6 patient checkpoints include event timestamps and patient KPIs, but no minute-by-minute queue or resource-utilization traces.",
+    "This comparison covers one replication for each predictive branch, not the full 64-replication confirmatory protocol.",
+    "No matching H.1-R6 observed-control checkpoint was included in the files verified for this check."
+  ],
+  "privacy": "Aggregate statistics only; no patient identifiers or patient-level rows are included."
+}

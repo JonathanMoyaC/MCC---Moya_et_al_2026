@@ -1,0 +1,17 @@
+.git
+.pytest_cache
+.ruff_cache
+.venv
+__pycache__
+*.py[cod]
+tests/
+project_sources/
+upload/
+*.xlsx
+*.xls
+*.pkl
+*.joblib
+*.ipynb
+*.csv.gz
+step*_*.json
+calibration_audit_*.json

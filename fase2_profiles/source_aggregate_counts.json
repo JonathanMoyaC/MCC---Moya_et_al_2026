@@ -1,0 +1,32 @@
+[
+  {
+    "year": 2016,
+    "source_file": "01-Unificado2016_01-05-2025.xlsx",
+    "rows_read": 99030,
+    "rows_with_c1_c5": 98917,
+    "rows_other_or_missing_category": 113,
+    "arrival_parse_missing": 0,
+    "triage_parse_missing": 0,
+    "discharge_parse_missing": 0
+  },
+  {
+    "year": 2017,
+    "source_file": "03-Unificado2017_19-04-2025.xlsx",
+    "rows_read": 119083,
+    "rows_with_c1_c5": 118979,
+    "rows_other_or_missing_category": 104,
+    "arrival_parse_missing": 0,
+    "triage_parse_missing": 0,
+    "discharge_parse_missing": 1
+  },
+  {
+    "year": 2018,
+    "source_file": "02-Unificado2018_19-04-2025.xlsx",
+    "rows_read": 141482,
+    "rows_with_c1_c5": 141357,
+    "rows_other_or_missing_category": 125,
+    "arrival_parse_missing": 0,
+    "triage_parse_missing": 0,
+    "discharge_parse_missing": 0
+  }
+]

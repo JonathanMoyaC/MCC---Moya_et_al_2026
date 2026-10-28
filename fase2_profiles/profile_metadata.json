@@ -1,0 +1,36 @@
+{
+  "purpose": "Aggregate profiles for emergency-unit simulation",
+  "source_years": [
+    2016,
+    2017,
+    2018
+  ],
+  "profile_strata": {
+    "month": "1-12",
+    "day_type": [
+      "dia_habil",
+      "fin_de_semana"
+    ],
+    "hour": "0-23"
+  },
+  "arrival_denominator": "Number of calendar days of the same month and day_type across 2016-2018",
+  "severity_policy": "Only niv_cod values C1-C5 included; other/missing categories excluded and counted in source summary",
+  "severity_smoothing": {
+    "method": "Dirichlet-style shrinkage toward month x day_type category proportions",
+    "pseudo_count_alpha": 20.0,
+    "raw_and_smoothed_probabilities_both_exported": true
+  },
+  "interval_policy": "Store aggregate empirical quantiles by category and year; include only parseable, nonnegative intervals",
+  "intervals": {
+    "ingreso_a_triage": "tri_fecha_hora - urg_fecha_hora; observed interval, not pure queue wait or service duration",
+    "ingreso_a_egreso_LOS": "urg_fecha_egreso - urg_fecha_hora; observed LOS interval"
+  },
+  "privacy": "No row-level records, identifiers, exact dates, birth dates, staff codes, or free text are exported",
+  "known_limitations": [
+    "Door-to-Doctor cannot be calculated from these source columns",
+    "Historical staffing by shift is unavailable",
+    "Year-to-year volume shift should be reviewed before treating the pooled profile as current demand",
+    "Clinical feature missingness/range issues require a separate model-input audit"
+  ],
+  "sampling_note": "For application sampling, interpolate the quantile function using a deterministic seed; report source year scope and seed."
+}
