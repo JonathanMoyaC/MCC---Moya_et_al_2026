@@ -251,7 +251,6 @@ class EmergencyDepartmentModelMesa(Model):
                     patient.state = "waiting_triage"
                     patient.queue_entry_minute = self.clock_minute
                     self.queues["triage"].append(patient)
-                    free -= 1
                     continue
             else:
                 patient.triage_start = self.clock_minute
@@ -374,3 +373,4 @@ class EmergencyDepartmentModelMesa(Model):
         while self.running:
             self.step()
         return self.patient_results, self.minute_results
+
