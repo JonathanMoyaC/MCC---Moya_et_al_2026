@@ -8,9 +8,10 @@ Documentar el análisis final de sensibilidad entregado para ajustar la represen
 
 - Población de evaluación: adultos de las cuatro ventanas H.6 de 2018; 3.514 casos de evaluación por réplica.
 - Llegadas y categoría observada: cohorte histórica bloqueada de 2018. Las ventanas se simulan por separado con su calentamiento.
-- Tiempo de admisión: un minuto fijo por paciente, usado como placeholder determinístico no validado.
+- Tiempo de admisión: un minuto fijo por paciente, usado como placeholder determinístico no validado. Los 17 intervalos admisión–triage presentes en el insumo no se usan como tiempos de servicio.
 - Duración de triage: distribución empírica de 38 mediciones aproximadas tomadas in situ en adultos durante 2025. Se escala por 0,75×, 1,00× y 1,25×; son parámetros exploratorios, no datos de 2018.
-- Tiempo de atención: insumo F3.1/H.1-R6 del período 18–20 de septiembre de 2017.
+- Tiempo de atención: 457 duraciones adultas del período 18–20 de septiembre de 2017 (C2=200, C3=220, C4=29), filtradas y congeladas en el insumo privado que usa el ejecutor.
+- Recursos fijos: admisión=2, médicos=12, boxes=11; fracciones de ocupación de médicos/boxes=0,25/0,60. La capacidad de triage es el factor de dotación que varía (1 o 2).
 - Políticas de prioridad comparadas en el análisis: referencia con prioridad observada, clasificación multiclase plana y clasificación jerárquica.
 - Réplicas: la celda de referencia capacidad 1/factor 1,00× tiene 128; las otras cinco celdas, 32 cada una. Las asignaciones predictivas usan realizaciones compartidas de 64 réplicas.
 - Intervalos: percentiles 2,5 y 97,5 de los estimandos por réplica. No corresponden a intervalos calculados agrupando pacientes.
@@ -54,6 +55,6 @@ uv run python validation/triage_time_staffing_sensitivity/run_triage_time_sensit
 
 Sin repetir `--scenario`, el ejecutor usa la cuadrícula exacta de seis configuraciones y los tamaños de réplica indicados arriba. Las salidas de checkpoint contienen diferencias por paciente y deben permanecer fuera del repositorio; `--output-dir` contiene solo agregados. Cohorte, asignaciones H.6 y archivo de muestras no se distribuyen en GitHub. El JSON de muestras está fijado por SHA-256 en el ejecutor.
 
-La interfaz online también permite variar puestos de admisión/triage, admisión fija de 0–2 min y el factor de duración 0,75–1,25×. Esa interfaz genera llegadas sintéticas, así que sus corridas no reproducen las cifras H.6 de esta tabla. Se mantiene el insumo de atención F3.1/H.1-R6.
+La interfaz online también permite variar puestos de admisión/triage, admisión fija de 0–2 min y el factor de duración 0,75–1,25×. Usa el mismo paquete congelado de duraciones que el análisis, pero genera llegadas sintéticas; por eso sus corridas no reproducen las cifras H.6 de esta tabla. El ejecutor reproduce la tabla cuando se le entregan la cohorte adulta H.6, las asignaciones de prioridad, las muestras privadas fijadas por SHA-256 y la semilla del manifiesto.
 
 
