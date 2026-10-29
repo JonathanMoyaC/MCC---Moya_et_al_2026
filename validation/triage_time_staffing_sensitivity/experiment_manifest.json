@@ -1,0 +1,91 @@
+{
+  "experiment": "Triage duration and staffing sensitivity",
+  "run_stage": "final; base configuration completed at 128 replications, other grid cells at 32",
+  "population": "2018 H6 adult-only locked windows; 3,514 evaluation cases per replication",
+  "calibration_period": "2017-09-18 through 2017-09-20; attention service inputs from F3.1/H.1-R6",
+  "registration_duration": "fixed 1-minute deterministic placeholder; unvalidated",
+  "triage_duration": "38 adult-only in-situ measurements from 2025, used as approximate external service-duration distribution",
+  "common_random_numbers": true,
+  "ci_method": "2.5th–97.5th percentiles across replication-level estimands",
+  "scenarios": [
+    {
+      "triage_capacity": 1,
+      "triage_duration_factor": 0.75,
+      "simulation_replications": 32,
+      "assignment_realizations": 64,
+      "registration_duration_assumption_minutes": 1,
+      "registration_assumption_status": "unvalidated deterministic placeholder",
+      "policies": [
+        "observed_priority_reference",
+        "flat_multiclass_classifier",
+        "hierarchical_classifier"
+      ]
+    },
+    {
+      "triage_capacity": 1,
+      "triage_duration_factor": 1.0,
+      "simulation_replications": 128,
+      "assignment_realizations": 64,
+      "registration_duration_assumption_minutes": 1,
+      "registration_assumption_status": "unvalidated deterministic placeholder",
+      "policies": [
+        "observed_priority_reference",
+        "flat_multiclass_classifier",
+        "hierarchical_classifier"
+      ]
+    },
+    {
+      "triage_capacity": 1,
+      "triage_duration_factor": 1.25,
+      "simulation_replications": 32,
+      "assignment_realizations": 64,
+      "registration_duration_assumption_minutes": 1,
+      "registration_assumption_status": "unvalidated deterministic placeholder",
+      "policies": [
+        "observed_priority_reference",
+        "flat_multiclass_classifier",
+        "hierarchical_classifier"
+      ]
+    },
+    {
+      "triage_capacity": 2,
+      "triage_duration_factor": 0.75,
+      "simulation_replications": 32,
+      "assignment_realizations": 64,
+      "registration_duration_assumption_minutes": 1,
+      "registration_assumption_status": "unvalidated deterministic placeholder",
+      "policies": [
+        "observed_priority_reference",
+        "flat_multiclass_classifier",
+        "hierarchical_classifier"
+      ]
+    },
+    {
+      "triage_capacity": 2,
+      "triage_duration_factor": 1.0,
+      "simulation_replications": 32,
+      "assignment_realizations": 64,
+      "registration_duration_assumption_minutes": 1,
+      "registration_assumption_status": "unvalidated deterministic placeholder",
+      "policies": [
+        "observed_priority_reference",
+        "flat_multiclass_classifier",
+        "hierarchical_classifier"
+      ]
+    },
+    {
+      "triage_capacity": 2,
+      "triage_duration_factor": 1.25,
+      "simulation_replications": 32,
+      "assignment_realizations": 64,
+      "registration_duration_assumption_minutes": 1,
+      "registration_assumption_status": "unvalidated deterministic placeholder",
+      "policies": [
+        "observed_priority_reference",
+        "flat_multiclass_classifier",
+        "hierarchical_classifier"
+      ]
+    }
+  ],
+  "privacy": "Only aggregated estimands are included; no patient-level rows or identifiers."
+}
