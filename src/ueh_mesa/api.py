@@ -31,7 +31,7 @@ class SimulationRunBody(BaseModel):
     triage_capacity: int = Field(default=1, ge=1, le=50)
     triage_duration_factor: float = Field(default=1.0, ge=0.75, le=1.25)
     doctor_capacity: int = Field(default=12, ge=1, le=200)
-    box_capacity: int = Field(default=18, ge=1, le=300)
+    box_capacity: int = Field(default=11, ge=1, le=300)
 
 
 def _runtime_service() -> SimulationService:
