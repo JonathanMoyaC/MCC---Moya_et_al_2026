@@ -8,9 +8,12 @@ services:
     environment:
       UEH_ARRIVAL_PROFILE_PATH: /app/fase2_profiles/hourly_arrival_severity_profile.csv
       UEH_CALIBRATION_CACHE_PATH: /run/secrets/calibration_cache
+      UEH_SERVICE_SAMPLES_PATH: /run/secrets/adult_service_samples
     secrets:
       - source: calibration_cache
         target: calibration_cache
+      - source: adult_service_samples
+        target: adult_service_samples
     read_only: true
     tmpfs:
       - /tmp
@@ -65,3 +68,5 @@ services:
 secrets:
   calibration_cache:
     file: ${UEH_CALIBRATION_CACHE_HOST_PATH:?Set UEH_CALIBRATION_CACHE_HOST_PATH to the approved F3 calibration cache}
+  adult_service_samples:
+    file: ${UEH_SERVICE_SAMPLES_HOST_PATH:?Set UEH_SERVICE_SAMPLES_HOST_PATH to the approved adult_service_samples.json}
