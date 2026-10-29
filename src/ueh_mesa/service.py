@@ -25,7 +25,7 @@ class SimulationRequest:
     triage_capacity: int = 1
     triage_duration_factor: float = 1.0
     doctor_capacity: int = 12
-    box_capacity: int = 18
+    box_capacity: int = 11
 
 
 class SimulationService:
@@ -167,7 +167,9 @@ class SimulationService:
             "esi_model_applied": False,
             "arrival_count_assumption": "Poisson per comparable calendar-day hour",
             "within_hour_arrival_assumption": "Uniform over integer minutes 0-59",
-            "attention_duration_source": "F3.1/H.1-R6 empirical calibration cache",
+            "attention_duration_source": self.calibration.metadata.get(
+                "attention_service_source", "F3.1/H.1-R6 empirical calibration cache"
+            ),
             "registration_duration_note": "The default one-minute duration is an unvalidated placeholder; 0–2 minute settings are exploratory sensitivity assumptions.",
             "triage_duration_source": self.calibration.metadata.get("triage_service_source", "F3.1/H.1-R6 empirical calibration cache"),
             "triage_duration_note": "The 2025 in-situ adult measurements are approximate external inputs, not 2018 outcomes.",
