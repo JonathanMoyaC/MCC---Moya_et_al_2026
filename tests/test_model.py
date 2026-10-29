@@ -83,6 +83,39 @@ def test_f3_keyed_randomness_and_discrete_empirical_quantile_match_reference():
     assert empirical_quantile_sample([4.6, 1.2, 3.4], 0.67) == 5
 
 
+def test_registration_zero_is_instant_and_wait_triage_components_are_recorded():
+    model = EmergencyDepartmentModelMesa(
+        cohort([("p1", 0, "C3"), ("p2", 0, "C4")]), SAMPLES,
+        config=ModelConfig(registration_capacity=1, triage_capacity=1, registration_service_minutes=0),
+    )
+    patients, _ = model.run_to_completion()
+    by_id = {row["patient_id"]: row for row in patients}
+    assert len(by_id) == 2
+    assert all(row["registration_start"] == row["registration_end"] == 0 for row in by_id.values())
+    assert all(row["registration_time_sim"] == 0 for row in by_id.values())
+    assert all(row["registration_queue_wait_sim"] == 0 for row in by_id.values())
+    assert by_id["p1"]["triage_start"] == 0
+    assert by_id["p2"]["triage_start"] == 1
+    assert by_id["p2"]["triage_queue_wait_sim"] == 1
+    assert all(row["wait_triage_sim"] == row["triage_start"] - row["arrival_minute"] for row in by_id.values())
+
+
+def test_triage_factor_scales_empirical_service_duration():
+    services = {"registration": [1], "triage": [8], "attention": [4]}
+    faster = EmergencyDepartmentModelMesa(
+        cohort([("p1", 0, "C3")]), services,
+        config=ModelConfig(triage_factor=0.75),
+    )
+    slower = EmergencyDepartmentModelMesa(
+        cohort([("p1", 0, "C3")]), services,
+        config=ModelConfig(triage_factor=1.25),
+    )
+    faster.run_to_completion()
+    slower.run_to_completion()
+    assert faster.patient_results[0]["triage_time_sim"] == 6
+    assert slower.patient_results[0]["triage_time_sim"] == 10
+
+
 def test_model_accepts_calibration_bundle_and_retains_provenance():
     bundle = EmpiricalInputModel(
         registration=(3, 5), triage=(1, 2), attention_global=(10, 20),
@@ -101,3 +134,4 @@ def test_timestamp_arrivals_follow_f3_floor_then_minute_rounding_and_id_tie_brea
     ]
     normalized = normalize_cohort(rows)
     assert [(r["patient_id"], r["arrival_minute"]) for r in normalized] == [("a", 1), ("z", 1)]
+

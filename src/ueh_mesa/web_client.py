@@ -11,7 +11,8 @@ from urllib.request import Request, urlopen
 def build_simulation_payload(
     *, start_date: date, start_hour: int, horizon_hours: int,
     master_seed: int, replication_id: int, severity_probabilities: str,
-    registration_capacity: int, triage_capacity: int,
+    registration_capacity: int, registration_service_minutes: int,
+    triage_capacity: int, triage_duration_factor: float,
     doctor_capacity: int, box_capacity: int,
 ) -> dict[str, object]:
     """Build the API request from explicit UI values."""
@@ -22,7 +23,9 @@ def build_simulation_payload(
         "replication_id": int(replication_id),
         "severity_probabilities": severity_probabilities,
         "registration_capacity": int(registration_capacity),
+        "registration_service_minutes": int(registration_service_minutes),
         "triage_capacity": int(triage_capacity),
+        "triage_duration_factor": float(triage_duration_factor),
         "doctor_capacity": int(doctor_capacity),
         "box_capacity": int(box_capacity),
     }
@@ -75,7 +78,7 @@ def aggregate_replication_results(results: list[dict[str, object]]) -> dict[str,
         }
 
     metrics: dict[str, dict[str, float | None]] = {}
-    for metric in ("wait_triage", "wait_attention", "door_to_doctor", "attention_time", "length_of_stay"):
+    for metric in ("registration_queue_wait", "registration_duration", "triage_queue_wait", "triage_duration", "wait_triage", "wait_attention", "door_to_doctor", "attention_time", "length_of_stay"):
         row = {
             field: stats(series(("indicators", metric, field)))["mean"]
             for field in ("mean", "median", "p90", "p95")

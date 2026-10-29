@@ -184,6 +184,7 @@ Para instalar y levantar el servicio desde la raíz `mesa_prototype` (Python 3.1
 uv sync --locked --extra api --extra web
 export UEH_ARRIVAL_PROFILE_PATH="$PWD/fase2_profiles/hourly_arrival_severity_profile.csv"
 export UEH_CALIBRATION_CACHE_PATH="/ruta/runtime/restringida/calibration_cache_F1_R1_v2.pkl"
+export UEH_SERVICE_SAMPLES_PATH="/ruta/privada/adult_service_samples.json"
 uv run --no-sync uvicorn ueh_mesa.api:app --host 127.0.0.1 --port 8000
 ```
 
@@ -199,9 +200,11 @@ La caché de calibración debe estar disponible en el entorno de ejecución y co
   "replication_id": 0,
   "severity_probabilities": "smoothed",
   "registration_capacity": 2,
+  "registration_service_minutes": 1,
   "triage_capacity": 1,
+  "triage_duration_factor": 1.0,
   "doctor_capacity": 12,
-  "box_capacity": 18
+  "box_capacity": 11
 }
 ```
 
@@ -216,6 +219,7 @@ Requisitos: Docker Engine y Docker Compose v2. Desde esta carpeta, indica la rut
 
 ```bash
 UEH_CALIBRATION_CACHE_HOST_PATH=/ruta/aprobada/calibration_cache_F1_R1_v2.pkl \
+UEH_SERVICE_SAMPLES_HOST_PATH=/ruta/privada/adult_service_samples.json \
   docker compose up --build -d
 docker compose ps
 curl http://127.0.0.1:8000/health
@@ -234,3 +238,17 @@ Se ejecutó una comprobación condicional en cuatro ventanas independientes de 7
 Con la capacidad base 2/1/12/18, la tasa observada de llegadas supera la capacidad estimada de admisión para los periodos, y la cola crece; los tiempos simulados de triage y estadía quedan muy por encima de los observados. En una sensibilidad exploratoria de la ventana iniciada el 8 de enero, pasar admisión de 2 a 3 puestos redujo el promedio simulado de estadía de aproximadamente 2.273 a 164 minutos; el promedio hasta completar triage bajó de aproximadamente 2.183 a 66 minutos, aún mayor que los 9,5 minutos observados entre llegada y `tri_fecha_hora`. Esto no determina el número real de puestos: identifica una configuración que requiere contrastarse con registros operacionales.
 
 La semántica de `tri_fecha_hora` (inicio o término de triage) todavía no está confirmada, por lo que esa comparación es provisional. La validación es condicional a llegadas observadas; no valida el generador sintético, la inferencia LightGBM ni el muestreador de severidad. La fase 6 sigue abierta hasta confirmar capacidades, ejecutar las 64 réplicas confirmatorias y completar rendimiento y revisión de logs. Los resultados agregados están en `validation/phase6_validation_summary.json`; los libros fuente no se distribuyen en el paquete.
+
+
+## Ajustes de espera hasta triage y duración de servicios
+
+La interfaz permite explorar el efecto de las capacidades de admisión y triage, además de los tiempos de servicio:
+
+- **Admisión:** valor fijo de 0, 1 o 2 minutos. El valor base es 1 minuto y se identifica como supuesto determinístico no validado. La opción 0 procesa la admisión de forma instantánea en el mismo minuto.
+- **Triage:** las duraciones se muestrean de las 38 mediciones aproximadas tomadas in situ en adultos durante 2025. El factor 0,75×, 1,00× o 1,25× permite sensibilidad sobre esa distribución; no es una estimación clínica ni un resultado observado en 2018.
+- **Espera hasta triage:** se reporta como llegada → inicio de triage y se descompone en espera en cola de admisión, duración de admisión y espera en cola de triage. La duración del triage se informa aparte, pues ocurre después de iniciar el proceso.
+
+La API acepta `registration_service_minutes` (0–2) y `triage_duration_factor` (0,75–1,25), además de `registration_capacity` y `triage_capacity`. Los datos externos de tiempos de servicio no se incluyen en GitHub ni dentro de la imagen Docker. Deben montarse como secreto privado `adult_service_samples.json`; el servicio valida su SHA-256 y usa el mismo paquete congelado que el análisis: placeholder de admisión de 1 minuto, 38 duraciones adultas de triage de 2025 y duraciones adultas de atención del período 2017 (457 globales; C2=200, C3=220, C4=29). Los 17 intervalos llegada–triage del archivo se conservan como procedencia, pero no se interpretan como tiempos de servicio de admisión. El resumen de auditoría de la caché F3.1/H.1-R6 se conserva, pero sus vectores de atención más amplios no se usan en estas corridas. El ejecutor `validation/triage_time_staffing_sensitivity/run_triage_time_sensitivity.py` reproduce la cuadrícula H.6 con insumos privados; protocolo y tablas agregadas están en ese directorio. El endpoint online genera demanda sintética y no reproduce por sí solo las cifras de cohortes H.6.
+
+La sensibilidad usa capacidades 2/1/12/11 para admisión/triage/médicos/boxes —salvo la capacidad de triage que varía entre 1 y 2— y fracciones de ocupación de médico/box de 0,25/0,60. El placeholder de admisión es determinístico de 1 minuto; se comparan factores de duración de triage 0,75×, 1,00× y 1,25×. La configuración capacidad 1/factor 1,00× se ejecutó con 128 réplicas; las otras cinco configuraciones, con 32 cada una. Sus resultados son diagnósticos condicionales y no validan por sí solos la dotación real.
+

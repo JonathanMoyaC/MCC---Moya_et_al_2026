@@ -36,6 +36,10 @@ def test_service_runs_mesa_and_returns_only_aggregate_indicators():
     assert result["indicators"]["arrivals"] == result["indicators"]["completed"] > 0
     assert set(result["indicators"]["severity_counts"]) == set(CATEGORIES)
     assert result["indicators"]["length_of_stay"]["p95"] is not None
+    assert result["indicators"]["registration_duration"]["mean"] == 1
+    assert result["indicators"]["triage_duration"]["mean"] == 1
+    assert result["indicators"]["wait_triage"]["mean"] >= result["indicators"]["triage_queue_wait"]["mean"]
+    assert result["run"]["service_time_settings"]["registration_service_minutes"] == 1
     assert result["method"]["engine"] == "Mesa"
     assert result["method"]["esi_model_applied"] is False
     assert "patient_id" not in str(result)

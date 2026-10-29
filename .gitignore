@@ -14,6 +14,16 @@ validation/**/*cohort*.json
 validation/**/*samples*.json
 validation/**/outputs*/
 fase2_profiles/*.csv
-/validation/
+/validation/*
+!/validation/triage_time_staffing_sensitivity/
+/validation/triage_time_staffing_sensitivity/*
+!/validation/triage_time_staffing_sensitivity/README.md
+!/validation/triage_time_staffing_sensitivity/*.csv
+!/validation/triage_time_staffing_sensitivity/*.json
 *.egg-info/
 /Moya_et_al_2026
+
+/adult_service_samples.json
+
+/validation/triage_time_staffing_sensitivity/adult_service_samples.json
+!/validation/triage_time_staffing_sensitivity/run_triage_time_sensitivity.py
