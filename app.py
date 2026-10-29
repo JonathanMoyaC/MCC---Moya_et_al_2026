@@ -36,7 +36,7 @@ with st.sidebar:
         )
         st.caption("Estos controles son escenarios de sensibilidad; no identifican por sí solos la dotación real.")
         doctor_capacity = st.number_input("Médicos", min_value=1, max_value=200, value=12, step=1)
-        box_capacity = st.number_input("Boxes", min_value=1, max_value=300, value=18, step=1)
+        box_capacity = st.number_input("Boxes", min_value=1, max_value=300, value=11, step=1)
         st.subheader("Reproducibilidad")
         master_seed = st.number_input("Semilla maestra", min_value=0, max_value=2_147_483_647, value=42, step=1)
         replication_id = st.number_input("Primera réplica", min_value=0, max_value=2_147_483_637, value=0, step=1)
