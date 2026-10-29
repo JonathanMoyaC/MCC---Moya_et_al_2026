@@ -83,6 +83,37 @@ def test_f3_keyed_randomness_and_discrete_empirical_quantile_match_reference():
     assert empirical_quantile_sample([4.6, 1.2, 3.4], 0.67) == 5
 
 
+def test_registration_zero_is_instant_and_wait_triage_components_are_recorded():
+    model = EmergencyDepartmentModelMesa(
+        cohort([("p1", 0, "C3")]), SAMPLES,
+        config=ModelConfig(registration_service_minutes=0),
+    )
+    patients, _ = model.run_to_completion()
+    row = patients[0]
+    assert row["registration_start"] == row["registration_end"] == 0
+    assert row["triage_start"] == 0
+    assert row["registration_time_sim"] == 0
+    assert row["registration_queue_wait_sim"] == 0
+    assert row["triage_queue_wait_sim"] == 0
+    assert row["wait_triage_sim"] == row["triage_start"] - row["arrival_minute"]
+
+
+def test_triage_factor_scales_empirical_service_duration():
+    services = {"registration": [1], "triage": [8], "attention": [4]}
+    faster = EmergencyDepartmentModelMesa(
+        cohort([("p1", 0, "C3")]), services,
+        config=ModelConfig(triage_factor=0.75),
+    )
+    slower = EmergencyDepartmentModelMesa(
+        cohort([("p1", 0, "C3")]), services,
+        config=ModelConfig(triage_factor=1.25),
+    )
+    faster.run_to_completion()
+    slower.run_to_completion()
+    assert faster.patient_results[0]["triage_time_sim"] == 6
+    assert slower.patient_results[0]["triage_time_sim"] == 10
+
+
 def test_model_accepts_calibration_bundle_and_retains_provenance():
     bundle = EmpiricalInputModel(
         registration=(3, 5), triage=(1, 2), attention_global=(10, 20),
