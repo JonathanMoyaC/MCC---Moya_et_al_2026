@@ -15,3 +15,6 @@ upload/
 *.csv.gz
 step*_*.json
 calibration_audit_*.json
+
+validation/
+adult_service_samples.json
