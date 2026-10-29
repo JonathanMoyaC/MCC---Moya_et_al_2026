@@ -7,6 +7,7 @@ The original cache is never copied into this package.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from hashlib import sha256
 from pathlib import Path
 import pickle
@@ -278,3 +279,49 @@ class EmpiricalInputModel:
             attention_by_class=by_class,
             metadata=metadata,
         )
+
+
+EXPECTED_ADULT_SERVICE_SAMPLES_SHA256 = "340f27d51b7638ab105b65708a98757141eacf4c1094fea23f46cbd796ae94c5"
+
+
+def with_adult_triage_samples(
+    calibration: EmpiricalInputModel,
+    path: str | Path,
+    *,
+    expected_sha256: str | None = EXPECTED_ADULT_SERVICE_SAMPLES_SHA256,
+) -> EmpiricalInputModel:
+    """Use audited adult-only 2025 triage measurements with F3 attention inputs.
+
+    Registration is a deterministic one-minute placeholder unless overridden
+    per simulation request; the 17 registration-to-triage intervals are not
+    treated as verified registration service durations.
+    """
+    samples_path = Path(path)
+    if not samples_path.is_file():
+        raise FileNotFoundError(samples_path)
+    digest = _cache_sha256(samples_path)
+    if expected_sha256 is not None and digest != expected_sha256:
+        raise ValueError(f"La muestra externa de triage no coincide con el SHA-256 esperado: {digest}")
+    payload = json.loads(samples_path.read_text(encoding="utf-8"))
+    if payload.get("schema_version") != "adult-service-samples-v1":
+        raise ValueError("Versión de esquema no válida para las muestras de servicio")
+    if payload.get("population") != "confirmed age >=18 years only":
+        raise ValueError("Las muestras externas deben corresponder solo a adultos confirmados")
+    triage_values = tuple(sorted(float(value) for value in payload.get("triage_minutes", ())))
+    if len(triage_values) != 38 or any(not 1 <= value <= 720 for value in triage_values):
+        raise ValueError("Se requieren las 38 mediciones adultas de triage dentro de 1–720 min")
+    metadata = {
+        **calibration.metadata,
+        "registration_service_source": "fixed one-minute placeholder; unvalidated",
+        "triage_service_source": "adult-only in-situ measurements, 2025; external exploratory input",
+        "triage_service_measurement_year": payload.get("triage_measurement_year"),
+        "triage_service_sample_count": len(triage_values),
+        "adult_service_samples_sha256": digest,
+    }
+    return EmpiricalInputModel(
+        registration=(1.0,),
+        triage=triage_values,
+        attention_global=calibration.attention_global,
+        attention_by_class=calibration.attention_by_class,
+        metadata=metadata,
+    )
