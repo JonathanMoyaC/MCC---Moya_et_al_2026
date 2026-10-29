@@ -21,7 +21,9 @@ class SimulationRequest:
     replication_id: int = 0
     severity_probabilities: Literal["raw", "smoothed"] = "smoothed"
     registration_capacity: int = 2
+    registration_service_minutes: int = 1
     triage_capacity: int = 1
+    triage_duration_factor: float = 1.0
     doctor_capacity: int = 12
     box_capacity: int = 18
 
@@ -58,7 +60,9 @@ class SimulationService:
                 master_seed=request.master_seed,
                 replication_id=request.replication_id,
                 registration_capacity=request.registration_capacity,
+                registration_service_minutes=request.registration_service_minutes,
                 triage_capacity=request.triage_capacity,
+                triage_factor=request.triage_duration_factor,
                 doctor_capacity=request.doctor_capacity,
                 box_capacity=request.box_capacity,
             ),
@@ -67,6 +71,10 @@ class SimulationService:
         patient_frame = pd.DataFrame(patient_rows)
         minute_frame = pd.DataFrame(minute_rows)
         kpi_columns = {
+            "registration_queue_wait": "registration_queue_wait_sim",
+            "registration_duration": "registration_time_sim",
+            "triage_queue_wait": "triage_queue_wait_sim",
+            "triage_duration": "triage_time_sim",
             "wait_triage": "wait_triage_sim",
             "wait_attention": "wait_attention_sim",
             "door_to_doctor": "door2doctor_sim",
@@ -124,7 +132,7 @@ class SimulationService:
                 "simulation_minutes": 0,
                 **{
                     name: {"mean": None, "median": None, "p90": None, "p95": None}
-                    for name in ("wait_triage", "wait_attention", "door_to_doctor", "attention_time", "length_of_stay")
+                    for name in ("registration_queue_wait", "registration_duration", "triage_queue_wait", "triage_duration", "wait_triage", "wait_attention", "door_to_doctor", "attention_time", "length_of_stay")
                 },
                 "queues": {
                     key: {"mean": 0.0, "max": 0}
@@ -135,19 +143,23 @@ class SimulationService:
             "method": self._method_metadata(request),
         }
 
-    @staticmethod
-    def _run_metadata(request, generation, capacities) -> dict[str, object]:
+    def _run_metadata(self, request, generation, capacities) -> dict[str, object]:
         return {
             "start": request.start.isoformat(),
             "horizon_hours": request.horizon_hours,
             "master_seed": request.master_seed,
             "replication_id": request.replication_id,
             "capacities": capacities,
+            "service_time_settings": {
+                "registration_service_minutes": request.registration_service_minutes,
+                "registration_assumption": "deterministic exploratory placeholder; not empirically verified",
+                "triage_duration_factor": request.triage_duration_factor,
+                "triage_service_source": self.calibration.metadata.get("triage_service_source", "F3.1/H.1-R6 calibration cache"),
+            },
             "synthetic_patient_count": generation["synthetic_patient_count"],
         }
 
-    @staticmethod
-    def _method_metadata(request) -> dict[str, object]:
+    def _method_metadata(self, request) -> dict[str, object]:
         return {
             "engine": "Mesa",
             "severity_source": "historical_aggregate_probabilities",
@@ -155,6 +167,9 @@ class SimulationService:
             "esi_model_applied": False,
             "arrival_count_assumption": "Poisson per comparable calendar-day hour",
             "within_hour_arrival_assumption": "Uniform over integer minutes 0-59",
-            "service_duration_source": "F3.1/H.1-R6 empirical calibration cache",
+            "attention_duration_source": "F3.1/H.1-R6 empirical calibration cache",
+            "registration_duration_note": "The default one-minute duration is an unvalidated placeholder; 0–2 minute settings are exploratory sensitivity assumptions.",
+            "triage_duration_source": self.calibration.metadata.get("triage_service_source", "F3.1/H.1-R6 empirical calibration cache"),
+            "triage_duration_note": "The 2025 in-situ adult measurements are approximate external inputs, not 2018 outcomes.",
             "indicators_are_simulated": True,
         }
