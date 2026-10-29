@@ -68,24 +68,115 @@ def load_assignment(root: str, manifest: pd.DataFrame, assignment_rep: int, raw_
     return pd.read_csv(path, dtype={"patient_id": str, "window_id": str})
 
 
+def _normalize_categories(values: pd.Series) -> pd.Series:
+    text = values.astype(str).str.strip().str.upper().str.replace(r"\.0$", "", regex=True)
+    return text.str.replace(r"^C?([1-5])$", r"C\1", regex=True)
+
+
+def _with_2018_prefix(values: pd.Series) -> pd.Series:
+    text = values.astype(str).str.strip()
+    return text.where(text.str.startswith("2018-"), "2018-" + text)
+
+
+def _assignment_join_id(frame: pd.DataFrame, assignment: pd.DataFrame) -> pd.Series:
+    """Choose a cohort key only when it joins all evaluation rows and acuities."""
+    required = {"patient_id", "window_id", "triage_observed", "triage_assigned"}
+    if missing := required - set(assignment.columns):
+        raise ValueError(f"Assignment file is missing columns: {sorted(missing)}")
+
+    eval_mask = frame["evaluation_case"].astype(bool)
+    eval_rows = frame.loc[eval_mask]
+    if eval_rows.empty:
+        raise ValueError("Cohort has no evaluation cases")
+
+    lookup = assignment[["patient_id", "window_id", "triage_observed"]].copy()
+    lookup["patient_id"] = lookup["patient_id"].astype(str).str.strip()
+    lookup["window_id"] = lookup["window_id"].astype(str).str.strip()
+    lookup["_assignment_observed"] = _normalize_categories(lookup["triage_observed"])
+    lookup = lookup.rename(columns={"patient_id": "_assignment_id"})
+    if lookup.duplicated(["_assignment_id", "window_id"]).any():
+        raise ValueError("Assignment file has duplicate patient/window keys")
+
+    candidates: list[tuple[str, pd.Series]] = []
+    if "internal_folio" in frame.columns:
+        candidates.append(("2018-prefixed internal_folio", _with_2018_prefix(frame["internal_folio"])))
+    if "patient_id" in frame.columns:
+        patient_id = frame["patient_id"].astype(str).str.strip()
+        candidates.append(("patient_id direct", patient_id))
+        if not patient_id.str.startswith("2018-").all():
+            candidates.append(("2018-prefixed patient_id", _with_2018_prefix(patient_id)))
+
+    diagnostics: list[str] = []
+    valid: list[tuple[str, pd.Series]] = []
+    seen: set[tuple[str, ...]] = set()
+    for label, values in candidates:
+        candidate = values.astype(str).str.strip()
+        signature = tuple(candidate.loc[eval_mask].tolist())
+        if signature in seen:
+            continue
+        seen.add(signature)
+
+        probe = pd.DataFrame({
+            "_candidate_id": candidate.loc[eval_mask].to_numpy(),
+            "window_id": eval_rows["window_id"].astype(str).str.strip().to_numpy(),
+            "_cohort_observed": _normalize_categories(eval_rows["triage_observed"]).to_numpy(),
+        })
+        joined = probe.merge(
+            lookup[["_assignment_id", "window_id", "_assignment_observed"]],
+            left_on=["_candidate_id", "window_id"],
+            right_on=["_assignment_id", "window_id"],
+            how="left",
+            validate="one_to_one",
+        )
+        matched = int(joined["_assignment_id"].notna().sum())
+        acuity_matches = int(
+            (joined["_cohort_observed"] == joined["_assignment_observed"]).sum()
+        )
+        diagnostics.append(f"{label}: {matched}/{len(eval_rows)} IDs, {acuity_matches} acuity matches")
+        if matched == len(eval_rows) and acuity_matches == len(eval_rows):
+            valid.append((label, candidate))
+
+    if not valid:
+        raise RuntimeError(
+            "Could not match assignment IDs to the complete evaluation cohort. "
+            + "; ".join(diagnostics)
+        )
+    if len(valid) > 1:
+        first = valid[0][1].astype(str).to_numpy()
+        if any(not first.tolist() == values.astype(str).to_numpy().tolist() for _, values in valid[1:]):
+            raise RuntimeError("Multiple distinct cohort ID mappings match the assignments; refusing an ambiguous join")
+    return valid[0][1]
+
+
 def make_rows(cohort: pd.DataFrame, assignment: pd.DataFrame | None) -> pd.DataFrame:
     frame = cohort.copy()
-    frame["join_id"] = "2018-" + frame.internal_folio.astype(str)
+    frame["window_id"] = frame["window_id"].astype(str).str.strip()
+    frame["triage_observed"] = _normalize_categories(frame["triage_observed"])
+    frame["evaluation_case"] = frame["evaluation_case"].astype(bool)
     if assignment is None:
-        frame["triage_assigned"] = frame.triage_observed
+        frame["triage_assigned"] = frame["triage_observed"]
     else:
+        frame["join_id"] = _assignment_join_id(frame, assignment)
         a = assignment[["patient_id", "window_id", "triage_observed", "triage_assigned"]].copy()
-        for col in ("triage_observed", "triage_assigned"):
-            a[col] = "C" + a[col].astype(str).str.replace(r"\.0$", "", regex=True)
+        a["patient_id"] = a["patient_id"].astype(str).str.strip()
+        a["window_id"] = a["window_id"].astype(str).str.strip()
+        a["triage_observed"] = _normalize_categories(a["triage_observed"])
+        a["triage_assigned"] = _normalize_categories(a["triage_assigned"])
+        a = a.rename(columns={
+            "patient_id": "join_id",
+            "triage_observed": "triage_observed_assignment",
+        })
         frame = frame.merge(
-            a, left_on=["join_id", "window_id"], right_on=["patient_id", "window_id"],
-            how="left", suffixes=("", "_assignment"), validate="one_to_one",
+            a[["join_id", "window_id", "triage_observed_assignment", "triage_assigned"]],
+            on=["join_id", "window_id"],
+            how="left",
+            validate="one_to_one",
         )
-        eval_mask = frame.evaluation_case
+        eval_mask = frame["evaluation_case"]
         if frame.loc[eval_mask, "triage_assigned"].isna().any():
             raise RuntimeError("Unmatched classifier assignments in evaluation cohort")
         if (frame.loc[eval_mask, "triage_observed"] != frame.loc[eval_mask, "triage_observed_assignment"]).any():
-            raise RuntimeError("Observed triage mismatch")
+            raise RuntimeError("Observed triage mismatch after assignment join")
         frame.loc[~eval_mask, "triage_assigned"] = frame.loc[~eval_mask, "triage_observed"]
     return frame[["patient_id", "window_id", "arrival_time", "triage_observed", "triage_assigned", "evaluation_case"]]
 
