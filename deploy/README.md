@@ -6,7 +6,7 @@ Este runbook cubre la construcción y operación inicial en un host Linux privad
 
 - Instalar Docker Engine y el plugin Docker Compose v2.
 - Mantener el repositorio en una ruta de servicio con acceso de escritura restringido.
-- Guardar la caché aprobada F3.1/H.1-R6 fuera del repositorio y del contexto de construcción.
+- Guardar la caché aprobada F3.1/H.1-R6 y `adult_service_samples.json` fuera del repositorio y del contexto de construcción.
 - Asegurar que el archivo de caché sea legible dentro del contenedor por UID 10001, que corre sin privilegios. Con Docker rootless, verificar el mapeo de UID del daemon. No ampliar los permisos de lectura a otros usuarios del host.
 - No copiar los libros Excel, artefactos `joblib` ni la caché restringida al repositorio o a la imagen.
 
@@ -16,11 +16,12 @@ Desde la carpeta `mesa_prototype`:
 
 ```bash
 export UEH_CALIBRATION_CACHE_HOST_PATH=/ruta/privada/calibration_cache_F1_R1_v2.pkl
+export UEH_SERVICE_SAMPLES_HOST_PATH=/ruta/privada/adult_service_samples.json
 export UEH_IMAGE_TAG=0.1.0
 bash scripts/deploy_preflight.sh
 ```
 
-El preflight verifica el hash de la caché, que esta quede fuera del contexto del proyecto, y que Docker/Compose puedan resolver el YAML. El hash requerido está fijado en `src/ueh_mesa/calibration.py`. Si falla, detener el despliegue y resolver la causa; no sustituir la caché por otra versión sin auditarla.
+El preflight verifica los hashes aprobados de la caché y las muestras adultas, que ambas queden fuera del contexto del proyecto con permisos restringidos, y que Docker/Compose puedan resolver el YAML. El hash requerido está fijado en `src/ueh_mesa/calibration.py`. Si falla, detener el despliegue y resolver la causa; no sustituir la caché por otra versión sin auditarla.
 
 Si se usa Docker rootful con el UID/GID del contenedor sin remapeo, una configuración posible para el archivo es propietario `root`, grupo numérico `10001` y modo `0440`; verificar primero que el grupo de servicio corresponda a UID/GID 10001 y que no haya ACLs que amplíen acceso. No ejecutar esos cambios sobre una caché compartida sin evaluar los demás consumidores.
 
@@ -69,4 +70,17 @@ Confirmar de nuevo los dos health checks. Conservar el tag anterior hasta aproba
 docker compose down
 ```
 
-La caché se monta como secreto de Compose en modo de solo lectura. Compose local monta archivos del host; antes del arranque se debe comprobar que UID 10001 pueda leer la caché y que ningún otro usuario del host obtenga acceso adicional.
+La caché y las muestras de servicio adultas se montan como secretos de Compose en modo de solo lectura. Compose local monta archivos del host; antes del arranque se debe comprobar que UID 10001 pueda leer la caché y que ningún otro usuario del host obtenga acceso adicional.
+
+
+## Secreto adicional para tiempos de servicio adultos
+
+La versión que reproduce la sensibilidad de triage requiere, además de la caché F3.1, el archivo externo `adult_service_samples.json`. No lo agregues al repositorio ni a la imagen. En PowerShell, define su ruta absoluta antes de reconstruir y levantar Compose:
+
+```powershell
+$env:UEH_SERVICE_SAMPLES_HOST_PATH = "C:\ruta\segura\adult_service_samples.json"
+docker compose config --quiet
+docker compose up --build -d
+```
+
+La API y el preflight comprueban el SHA-256 aprobado del archivo (`340f27d51b7638ab105b65708a98757141eacf4c1094fea23f46cbd796ae94c5`), usan sus 38 mediciones adultas de triage de 2025 y mantienen las duraciones de atención desde la caché F3.1. La admisión se fija por corrida en 0, 1 o 2 minutos; 1 minuto es el placeholder usado en la sensibilidad y no está empíricamente confirmado. Si la ruta falta, Compose no inicia la versión actualizada.
