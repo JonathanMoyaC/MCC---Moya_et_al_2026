@@ -1,4 +1,4 @@
-"""Paired ED simulation sensitivity analysis for triage capacity (1, 2, 3)."""
+"""Reproduce paired H6 sensitivity results for triage capacity (1 or 2)."""
 from __future__ import annotations
 
 import argparse
@@ -42,11 +42,13 @@ def load_service_inputs(path: str) -> EmpiricalInputModel:
     if digest != EXPECTED_SERVICE_SAMPLES_SHA256:
         raise RuntimeError(f"Adult service sample SHA-256 mismatch: {digest}")
     x = json.loads(source.read_text(encoding="utf-8"))
-    registration = tuple(map(float, x["registration_minutes"]))
-    if registration != (1.0,):
-        raise RuntimeError(f"Expected the frozen one-minute registration placeholder; found {registration!r}")
+    # These are 17 arrival-to-triage intervals, not verified active admission
+    # service durations. They are intentionally excluded from the simulation.
+    registration_intervals = tuple(map(float, x["registration_minutes"]))
+    if len(registration_intervals) != 17 or any(not 1 <= value <= 720 for value in registration_intervals):
+        raise RuntimeError("Expected the 17 audited admission-to-triage intervals (not used as service times)")
     return EmpiricalInputModel(
-        registration=registration,
+        registration=(1.0,),
         triage=tuple(map(float, x["triage_minutes"])),
         attention_global=tuple(map(float, x["attention_global_minutes"])),
         attention_by_class={k: tuple(map(float, v)) for k, v in x["attention_by_class_minutes"].items()},
