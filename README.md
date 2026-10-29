@@ -204,7 +204,7 @@ La caché de calibración debe estar disponible en el entorno de ejecución y co
   "triage_capacity": 1,
   "triage_duration_factor": 1.0,
   "doctor_capacity": 12,
-  "box_capacity": 18
+  "box_capacity": 11
 }
 ```
 
@@ -248,7 +248,7 @@ La interfaz permite explorar el efecto de las capacidades de admisión y triage,
 - **Triage:** las duraciones se muestrean de las 38 mediciones aproximadas tomadas in situ en adultos durante 2025. El factor 0,75×, 1,00× o 1,25× permite sensibilidad sobre esa distribución; no es una estimación clínica ni un resultado observado en 2018.
 - **Espera hasta triage:** se reporta como llegada → inicio de triage y se descompone en espera en cola de admisión, duración de admisión y espera en cola de triage. La duración del triage se informa aparte, pues ocurre después de iniciar el proceso.
 
-La API acepta `registration_service_minutes` (0–2) y `triage_duration_factor` (0,75–1,25), además de `registration_capacity` y `triage_capacity`. Los datos externos de tiempos de servicio no se incluyen en GitHub ni dentro de la imagen Docker. Deben montarse como secreto privado `adult_service_samples.json`; el servicio valida su SHA-256 aprobado y reemplaza solo las muestras de triage, conservando las duraciones de atención de la caché F3.1/H.1-R6. El ejecutor `validation/triage_time_staffing_sensitivity/run_triage_time_sensitivity.py` reproduce la cuadrícula H.6 con insumos privados; protocolo y tablas agregadas están en ese directorio. El endpoint online genera demanda sintética y no reproduce por sí solo las cifras de cohortes H.6.
+La API acepta `registration_service_minutes` (0–2) y `triage_duration_factor` (0,75–1,25), además de `registration_capacity` y `triage_capacity`. Los datos externos de tiempos de servicio no se incluyen en GitHub ni dentro de la imagen Docker. Deben montarse como secreto privado `adult_service_samples.json`; el servicio valida su SHA-256 y usa el mismo paquete congelado que el análisis: placeholder de admisión de 1 minuto, 38 duraciones adultas de triage de 2025 y duraciones adultas de atención del período 2017 (457 globales; C2=200, C3=220, C4=29). Los 17 intervalos llegada–triage del archivo se conservan como procedencia, pero no se interpretan como tiempos de servicio de admisión. El resumen de auditoría de la caché F3.1/H.1-R6 se conserva, pero sus vectores de atención más amplios no se usan en estas corridas. El ejecutor `validation/triage_time_staffing_sensitivity/run_triage_time_sensitivity.py` reproduce la cuadrícula H.6 con insumos privados; protocolo y tablas agregadas están en ese directorio. El endpoint online genera demanda sintética y no reproduce por sí solo las cifras de cohortes H.6.
 
-La sensibilidad usa un placeholder de admisión determinístico de 1 minuto, capacidad de triage de 1 o 2 y factores de duración 0,75×, 1,00× y 1,25×. La configuración capacidad 1/factor 1,00× se ejecutó con 128 réplicas; las otras cinco configuraciones, con 32 cada una. Sus resultados son diagnósticos condicionales y no validan por sí solos la dotación real.
+La sensibilidad usa capacidades 2/1/12/11 para admisión/triage/médicos/boxes —salvo la capacidad de triage que varía entre 1 y 2— y fracciones de ocupación de médico/box de 0,25/0,60. El placeholder de admisión es determinístico de 1 minuto; se comparan factores de duración de triage 0,75×, 1,00× y 1,25×. La configuración capacidad 1/factor 1,00× se ejecutó con 128 réplicas; las otras cinco configuraciones, con 32 cada una. Sus resultados son diagnósticos condicionales y no validan por sí solos la dotación real.
 
