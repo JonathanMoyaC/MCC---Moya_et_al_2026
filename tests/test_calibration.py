@@ -63,3 +63,27 @@ def test_h1_threshold_is_applied_before_duration_range_cleaning():
     by_class = _build_attention_by_class(selected, {"C4": 30})
     assert by_class == {"C4": (20.0,) * 29}
     assert _build_attention_by_class(selected, {"C4": 29}) == {}
+
+
+def test_adult_triage_inputs_require_adult_sample_schema_and_preserve_attention(tmp_path):
+    import json
+    from ueh_mesa.calibration import EmpiricalInputModel, with_adult_triage_samples
+
+    samples_path = tmp_path / "adult_service_samples.json"
+    samples_path.write_text(json.dumps({
+        "schema_version": "adult-service-samples-v1",
+        "population": "confirmed age >=18 years only",
+        "triage_measurement_year": 2025,
+        "triage_minutes": list(range(1, 39)),
+    }), encoding="utf-8")
+    base = EmpiricalInputModel(
+        registration=(9.0,), triage=(5.0,), attention_global=(12.0,),
+        attention_by_class={"C2": (14.0,)}, metadata={"source": "F3"},
+    )
+    updated = with_adult_triage_samples(base, samples_path, expected_sha256=None)
+    assert updated.registration == (1.0,)
+    assert updated.triage == tuple(float(value) for value in range(1, 39))
+    assert updated.attention_global == (12.0,)
+    assert updated.attention_by_class == {"C2": (14.0,)}
+    assert updated.metadata["triage_service_sample_count"] == 38
+    assert updated.metadata["registration_service_source"].startswith("fixed one-minute")
