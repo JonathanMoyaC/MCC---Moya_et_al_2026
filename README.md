@@ -205,7 +205,19 @@ La caché de calibración debe estar disponible en el entorno de ejecución y co
 }
 ```
 
-La ventana se limita a 1–168 horas; `start` debe estar alineado al inicio de una hora. La interfaz admite de 1 a 10 réplicas consecutivas; recursos, horizonte y campos desconocidos se validan en la API. Las dependencias de API y Streamlit están declaradas en los extras `api` y `web`, fijadas en `uv.lock`. Pasaron 30 pruebas; además, la interfaz se probó conectada a FastAPI/Uvicorn y Mesa. La corrida de 24 horas del 1 de enero de 2018 produjo 339 llegadas y completó 339, sin devolver IDs de paciente.
+La ventana se limita a 1–168 horas; `start` debe estar alineado al inicio de una hora. La interfaz admite de 1 a 10 réplicas consecutivas; recursos, horizonte y campos desconocidos se validan en la API. Las dependencias de API y Streamlit están declaradas en los extras `api` y `web`, fijadas en `uv.lock`. La prueba actual del conjunto automatizado se documenta junto con cada cambio de versión.
+
+### Interfaz del prototipo HRT
+
+La aplicación Streamlit ofrece tres vistas con parámetros comunes en el panel lateral:
+
+- **Retrospectivo:** compara indicadores simulados con un CSV de referencia ya agregado. El archivo debe corresponder al período elegido y declarar definición, fuente y unidades; no debe contener filas ni identificadores de pacientes. La plantilla se descarga desde la aplicación. Se informan diferencias y una concordancia relativa descriptiva; no se muestra una concordancia cuando el valor observado es cero.
+- **Contrafactual:** compara la configuración base con cambios de demanda, médicos y boxes. Se reutilizan semillas e identificadores de réplica entre escenarios; los resultados son escenarios simulados y no efectos causales.
+- **Predictivo:** proyecta llegadas diarias y resultados del simulador a partir de tasas históricas agrupadas. Las bandas son cuantiles entre réplicas, no intervalos de un modelo predictivo estadístico.
+
+Los parámetros incluyen período inclusivo de hasta siete días, multiplicador de demanda (0,5–2,0), admisión, capacidad de triage, médicos, boxes, semilla y número de réplicas. Las tasas de llegada horarias se multiplican por el factor de demanda; el backend limita la tasa final al rango admitido por su contrato. El panel muestra LOS, espera hasta el inicio del triage y door-to-doctor simulado; distingue explícitamente espera de duración del triage. Abandono se marca como no disponible porque el motor no modela ese evento. La severidad sigue siendo muestreo agregado: el clasificador ESI preentrenado no está integrado. Las categorías C1–C5 usan colores consistentes en gráficos.
+
+La cabecera identifica en texto la UCM, el HRT y el Magíster. Los archivos fuente disponibles no incluyen los logotipos originales en formato reutilizable; se deben agregar los recursos institucionales autorizados antes de presentar la interfaz como identidad visual final.
 
 
 ## Empaquetado y despliegue privado (paso 9 del orden de implementación)

@@ -20,6 +20,7 @@ class SimulationRequest:
     master_seed: int = 42
     replication_id: int = 0
     severity_probabilities: Literal["raw", "smoothed"] = "smoothed"
+    demand_multiplier: float = 1.0
     registration_capacity: int = 2
     triage_capacity: int = 1
     doctor_capacity: int = 12
@@ -41,6 +42,7 @@ class SimulationService:
             master_seed=request.master_seed,
             replication_id=request.replication_id,
             severity_probabilities=request.severity_probabilities,
+            demand_multiplier=request.demand_multiplier,
         )
         capacities = {
             "registration": request.registration_capacity,
@@ -99,6 +101,7 @@ class SimulationService:
                 **indicators,
             },
             "method": self._method_metadata(request),
+            "demand": {"hourly_arrivals": generation["hourly_arrivals"]},
         }
 
     @staticmethod
@@ -133,6 +136,7 @@ class SimulationService:
                 "resource_utilization": {key: 0.0 for key in ("registration", "triage", "doctor", "box")},
             },
             "method": self._method_metadata(request),
+            "demand": {"hourly_arrivals": generation["hourly_arrivals"]},
         }
 
     @staticmethod
@@ -140,6 +144,7 @@ class SimulationService:
         return {
             "start": request.start.isoformat(),
             "horizon_hours": request.horizon_hours,
+            "demand_multiplier": request.demand_multiplier,
             "master_seed": request.master_seed,
             "replication_id": request.replication_id,
             "capacities": capacities,
@@ -152,6 +157,7 @@ class SimulationService:
             "engine": "Mesa",
             "severity_source": "historical_aggregate_probabilities",
             "severity_probabilities": request.severity_probabilities,
+            "demand_multiplier": request.demand_multiplier,
             "esi_model_applied": False,
             "arrival_count_assumption": "Poisson per comparable calendar-day hour",
             "within_hour_arrival_assumption": "Uniform over integer minutes 0-59",
