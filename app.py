@@ -110,13 +110,21 @@ with st.sidebar:
             default_period = (today, today + timedelta(days=2))
         else:
             default_period = (date(2018, 1, 1), date(2018, 1, 3))
-        period = st.date_input(
-            "Período (fechas inclusivas)",
-            value=default_period,
+        period_start = st.date_input(
+            "Desde",
+            value=default_period[0],
             min_value=date(2016, 1, 1),
             max_value=date(2035, 12, 31),
-            key=f"period_{view}",
+            key=f"period_start_{view}",
         )
+        period_end = st.date_input(
+            "Hasta (inclusive)",
+            value=default_period[1],
+            min_value=date(2016, 1, 1),
+            max_value=date(2035, 12, 31),
+            key=f"period_end_{view}",
+        )
+        period = (period_start, period_end)
         demand_scale = st.slider(
             "Variación de demanda",
             min_value=0.5,
@@ -457,6 +465,29 @@ def show_run_metadata(result: dict):
     )
 
 
+def render_empty_dashboard(message: str):
+    st.info(message)
+    metrics = st.columns(5)
+    empty_metrics = (
+        ("LOS", "—", "Se calculará al ejecutar la simulación."),
+        ("Door-to-doctor", "—", "Se calculará como resultado simulado."),
+        ("Espera triage", "—", "Se calculará al ejecutar la simulación."),
+        ("% abandono", "No disponible", "El motor actual no modela abandono."),
+        ("Utilización", "—", "Se calculará al ejecutar la simulación."),
+    )
+    for column, (label, value, help_text) in zip(metrics, empty_metrics):
+        column.metric(label, value, help=help_text)
+    left, right = st.columns(2)
+    with left:
+        with st.container(border=True):
+            st.markdown("#### Pacientes por categoría ESI")
+            st.caption("El gráfico C1–C5 aparecerá con los conteos de la simulación.")
+    with right:
+        with st.container(border=True):
+            st.markdown("#### Utilización de recursos")
+            st.caption("Se mostrarán médicos, enfermería/triage, boxes y admisión.")
+
+
 def display_result(result: dict, reference: pd.DataFrame | None = None, predictive: bool = False):
     run = result["run"]
     indicators = result["indicators"]
@@ -612,7 +643,7 @@ if view == "Retrospectivo":
     st.caption("Comparación de simulación con una referencia observada agregada del mismo período.")
     result = st.session_state.get("result_Retrospectivo")
     if not result:
-        st.info("Ejecuta la simulación. Sin un CSV de referencia observada, el panel mostrará resultados simulados y señalará qué indicadores no están disponibles como observaciones.")
+        render_empty_dashboard("Aún no hay una corrida para este período. Ajusta Desde/Hasta en el panel lateral y pulsa «Ejecutar simulación». Sin un CSV de referencia agregada, se mostrarán solo resultados simulados.")
     else:
         display_result(result, reference)
         st.markdown("#### Comparación observado vs. simulado")
@@ -625,7 +656,7 @@ elif view == "Contrafactual":
     st.markdown("### Comparación de escenarios")
     results = st.session_state.get("contrast_results")
     if not results:
-        st.info("Selecciona escenarios en el panel superior y ejecuta la comparación.")
+        render_empty_dashboard("Aún no hay comparación calculada. Elige los escenarios en el panel superior, revisa las fechas en el panel lateral y pulsa «Ejecutar simulación».")
     else:
         baseline = results["Base (configuración vigente)"]
         show_run_metadata(baseline)
@@ -665,6 +696,6 @@ else:
     st.caption("Proyección de simulación basada en el perfil histórico agrupado. No se presenta como pronóstico estadístico entrenado.")
     result = st.session_state.get("result_Predictivo")
     if not result:
-        st.info("Elige un horizonte de hasta 7 días y ejecuta varias réplicas para estimar bandas de variación entre réplicas.")
+        render_empty_dashboard("Aún no hay proyección calculada. Define Desde/Hasta (máximo 7 días), ajusta las réplicas en Opciones avanzadas si lo necesitas y pulsa «Ejecutar simulación».")
     else:
         display_result(result, predictive=True)
