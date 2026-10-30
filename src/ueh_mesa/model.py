@@ -135,8 +135,9 @@ class PatientAgent(Agent):
 class EmergencyDepartmentModelMesa(Model):
     """Minute-step Mesa port for fixed cohorts, preserving H.1-R6 event order.
 
-    Durations are passed as empirical samples (minutes). This module deliberately
-    does not infer service distributions from arrival-to-triage or LOS fields.
+    Durations are passed as minute samples. Registration may take zero minutes,
+    which is processed immediately without occupying a full simulation step.
+    This module does not infer service durations from waiting times or LOS.
     """
 
     def __init__(
@@ -175,8 +176,9 @@ class EmergencyDepartmentModelMesa(Model):
         if missing:
             raise ValueError(f"Faltan distribuciones empíricas: {sorted(missing)}")
         for process, values in samples.items():
-            if not values or any(not 1 <= float(v) <= 720 for v in values):
-                raise ValueError(f"{process}: se requieren duraciones en el intervalo 1–720 min")
+            minimum = 0 if process == "registration" else 1
+            if not values or any(not minimum <= float(v) <= 720 for v in values):
+                raise ValueError(f"{process}: se requieren duraciones en el intervalo {minimum}–720 min")
 
     def _sample_minutes(self, patient: PatientAgent, process: str, category: str | None = None) -> int:
         key = process
@@ -194,7 +196,8 @@ class EmergencyDepartmentModelMesa(Model):
         }[process]
         if process == "attention" and category is not None:
             factor *= self.config.attention_factor_critical if category in ("C1", "C2") else self.config.attention_factor_noncritical
-        return max(1, round(sampled * factor))
+        scaled = round(sampled * factor)
+        return max(0 if process == "registration" else 1, scaled)
 
     def _complete_and_release(self) -> None:
         for stage in PROCESS_NAMES:
@@ -239,6 +242,12 @@ class EmergencyDepartmentModelMesa(Model):
             duration = self._sample_minutes(patient, stage)
             if stage == "registration":
                 patient.registration_start = self.clock_minute
+                if duration == 0:
+                    patient.registration_end = self.clock_minute
+                    patient.state = "waiting_triage"
+                    patient.queue_entry_minute = self.clock_minute
+                    self.queues["triage"].append(patient)
+                    continue
                 patient.state = "registration"
             else:
                 patient.triage_start = self.clock_minute
