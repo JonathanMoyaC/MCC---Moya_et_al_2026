@@ -12,7 +12,7 @@ def build_simulation_payload(
     *, start_date: date, start_hour: int, horizon_hours: int,
     master_seed: int, replication_id: int, severity_probabilities: str,
     registration_capacity: int, triage_capacity: int,
-    doctor_capacity: int, box_capacity: int,
+    doctor_capacity: int, box_capacity: int, demand_multiplier: float = 1.0,
 ) -> dict[str, object]:
     """Build the API request from explicit UI values."""
     return {
@@ -21,6 +21,7 @@ def build_simulation_payload(
         "master_seed": int(master_seed),
         "replication_id": int(replication_id),
         "severity_probabilities": severity_probabilities,
+        "demand_multiplier": float(demand_multiplier),
         "registration_capacity": int(registration_capacity),
         "triage_capacity": int(triage_capacity),
         "doctor_capacity": int(doctor_capacity),

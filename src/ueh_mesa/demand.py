@@ -90,6 +90,7 @@ def generate_synthetic_cohort(
     master_seed: int = 42,
     replication_id: int = 0,
     severity_probabilities: Literal["raw", "smoothed"] = "smoothed",
+    demand_multiplier: float = 1.0,
 ) -> tuple[pd.DataFrame, dict[str, object]]:
     """Sample a reproducible synthetic cohort and aggregate generation metadata.
 
@@ -106,10 +107,13 @@ def generate_synthetic_cohort(
         raise ValueError("horizon_hours debe ser un entero positivo.")
     if severity_probabilities not in ("raw", "smoothed"):
         raise ValueError("severity_probabilities debe ser 'raw' o 'smoothed'.")
+    if not np.isfinite(demand_multiplier) or not 0.1 <= float(demand_multiplier) <= 3.0:
+        raise ValueError("demand_multiplier debe estar entre 0.1 y 3.0.")
 
     frame = validate_arrival_profile(profile)
     lookup = frame.set_index(list(PROFILE_KEYS))
     sampled: list[tuple[datetime, str]] = []
+    hourly_arrivals: list[dict[str, object]] = []
     for offset in range(int(horizon_hours)):
         hour_start = start + timedelta(hours=offset)
         day_type = "fin_de_semana" if hour_start.weekday() >= 5 else "dia_habil"
@@ -118,7 +122,13 @@ def generate_synthetic_cohort(
         count_rng = _hour_rng(master_seed, replication_id, hour_key, "count")
         time_rng = _hour_rng(master_seed, replication_id, hour_key, "arrival_minute")
         severity_rng = _hour_rng(master_seed, replication_id, hour_key, "severity")
-        count = int(count_rng.poisson(float(cell["mean_arrivals_per_comparable_day_hour"])))
+        expected_count = float(cell["mean_arrivals_per_comparable_day_hour"]) * float(demand_multiplier)
+        count = int(count_rng.poisson(expected_count))
+        hourly_arrivals.append({
+            "time": hour_start.isoformat(timespec="hours"),
+            "expected_arrivals": expected_count,
+            "arrivals": count,
+        })
         if count == 0:
             continue
         minutes = time_rng.integers(0, 60, size=count)
@@ -145,12 +155,14 @@ def generate_synthetic_cohort(
         "profile_year_scope": "2016-2018 pooled historical",
         "start": start.isoformat(),
         "horizon_hours": int(horizon_hours),
+        "demand_multiplier": float(demand_multiplier),
         "master_seed": int(master_seed),
         "replication_id": int(replication_id),
         "arrival_count_model": "Poisson per comparable calendar-day hour (assumption)",
         "within_hour_arrival_model": "Uniform over integer minutes 0-59 (assumption)",
         "severity_probability_source": severity_probabilities,
         "synthetic_patient_count": len(cohort),
+        "hourly_arrivals": hourly_arrivals,
         "severity_counts": {
             category: int(cohort["triage_observed"].eq(category).sum())
             for category in CATEGORIES
