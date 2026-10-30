@@ -15,6 +15,7 @@ def test_ui_payload_matches_api_contract_and_uses_hour_aligned_start():
         "master_seed": 42,
         "replication_id": 3,
         "severity_probabilities": "smoothed",
+        "demand_multiplier": 1.0,
         "registration_capacity": 2,
         "triage_capacity": 1,
         "doctor_capacity": 12,

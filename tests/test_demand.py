@@ -50,3 +50,24 @@ def test_generation_rejects_unaligned_start_and_invalid_profile_probabilities():
     broken.loc[0, "p_C1_smoothed"] = 0.9
     with pytest.raises(ValueError, match="sumar 1"):
         validate_arrival_profile(broken)
+
+
+def test_demand_multiplier_scales_hourly_intensity_and_is_recorded():
+    profile = _profile()
+    one, one_meta = generate_synthetic_cohort(
+        profile, datetime(2018, 1, 1), 1, master_seed=9, replication_id=2,
+        demand_multiplier=1.0,
+    )
+    increased, increased_meta = generate_synthetic_cohort(
+        profile, datetime(2018, 1, 1), 1, master_seed=9, replication_id=2,
+        demand_multiplier=1.5,
+    )
+    assert one_meta["hourly_arrivals"][0]["expected_arrivals"] == 40
+    assert increased_meta["hourly_arrivals"][0]["expected_arrivals"] == 60
+    assert increased_meta["demand_multiplier"] == 1.5
+    assert len(one) >= 0 and len(increased) >= 0
+
+
+def test_demand_multiplier_must_be_in_supported_range():
+    with pytest.raises(ValueError, match="entre 0.1 y 3.0"):
+        generate_synthetic_cohort(_profile(), datetime(2018, 1, 1), 1, demand_multiplier=0)

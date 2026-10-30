@@ -15,6 +15,18 @@ def cohort(rows):
     ]
 
 
+def test_zero_minute_registration_is_instant_and_does_not_occupy_the_resource():
+    samples = {"registration": [0], "triage": [2], "attention": [1]}
+    model = EmergencyDepartmentModelMesa(cohort([("p1", 0, "C3")]), samples)
+    patients, minute_log = model.run_to_completion()
+    row = patients[0]
+    assert row["registration_start"] == row["registration_end"] == 0
+    assert row["triage_start"] == 0
+    assert row["triage_end"] == 2
+    assert row["attention_start"] == 2
+    assert all(entry["registration_utilization"] == 0 for entry in minute_log)
+
+
 def test_patient_pipeline_finishes_and_reports_core_indicators():
     model = EmergencyDepartmentModelMesa(cohort([("p1", 0, "C3")]), SAMPLES)
     patients, minute_log = model.run_to_completion()

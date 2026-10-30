@@ -40,6 +40,11 @@ OBS_TRIAGE_MIN = (
     1,1,2,6,1,3,1,1,1,1,1,2,1,2,1,2,1,1,1,
 )
 
+# User-approved exploratory duration ranges for the operational prototype.
+# Sampling is discrete uniform because Mesa advances in one-minute steps.
+DEFAULT_REGISTRATION_MINUTES = (0, 1, 2)
+DEFAULT_TRIAGE_MINUTES = (2, 3, 4, 5)
+
 
 class _RestrictedCacheUnpickler(pickle.Unpickler):
     """Allow only the NumPy/pandas globals observed in the audited cache."""
@@ -110,7 +115,7 @@ def empirical_quantile_sample_sorted(values: Sequence[float], u: float) -> int:
     if not values:
         raise ValueError("Distribución empírica vacía.")
     index = min(int(floor(u * len(values))), len(values) - 1)
-    return max(1, int(round(float(values[index]))))
+    return max(0, int(round(float(values[index]))))
 
 
 def _normalize_triage(value: object) -> str | None:
@@ -266,14 +271,14 @@ class EmpiricalInputModel:
                 c: int(class_nonmissing_counts.get(c, 0)) for c in TRIAGE_LEVELS
             },
             "attention_class_threshold": 30,
-            "registration_sample_count": len(OBS_ADMISSION_MIN),
-            "triage_sample_count": len(OBS_TRIAGE_MIN),
+            "registration_duration_assumption": "discrete uniform integer minutes, 0-2; exploratory and not empirically validated",
+            "triage_duration_assumption": "discrete uniform integer minutes, 2-5; exploratory and not empirically validated",
             "attention_global_min": float(global_values.min()),
             "attention_global_max": float(global_values.max()),
         }
         return cls(
-            registration=tuple(sorted(float(x) for x in OBS_ADMISSION_MIN if 1 <= x <= 720)),
-            triage=tuple(sorted(float(x) for x in OBS_TRIAGE_MIN if 1 <= x <= 720)),
+            registration=tuple(float(x) for x in DEFAULT_REGISTRATION_MINUTES),
+            triage=tuple(float(x) for x in DEFAULT_TRIAGE_MINUTES),
             attention_global=tuple(float(x) for x in global_values),
             attention_by_class=by_class,
             metadata=metadata,
