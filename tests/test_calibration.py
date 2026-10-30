@@ -4,7 +4,7 @@ from ueh_mesa.calibration import (
     DEFAULT_REGISTRATION_MINUTES,
     DEFAULT_TRIAGE_MINUTES,
     OBS_ADMISSION_MIN,
-    empirical_quantile_sample,
+    empirical_quantile_sample_sorted,
     OBS_TRIAGE_MIN,
     _build_attention_by_class,
     select_f3_calibration,
@@ -17,7 +17,7 @@ def test_operational_duration_assumptions_use_requested_discrete_ranges():
 
 
 def test_discrete_quantile_preserves_zero_minute_registration():
-    assert empirical_quantile_sample([0, 1, 2], 0.0) == 0
+    assert empirical_quantile_sample_sorted([0, 1, 2], 0.0) == 0
 
 
 def test_f3_frozen_registration_and_triage_vectors_are_present():
