@@ -115,7 +115,7 @@ def empirical_quantile_sample_sorted(values: Sequence[float], u: float) -> int:
     if not values:
         raise ValueError("Distribución empírica vacía.")
     index = min(int(floor(u * len(values))), len(values) - 1)
-    return max(1, int(round(float(values[index]))))
+    return max(0, int(round(float(values[index]))))
 
 
 def _normalize_triage(value: object) -> str | None:
