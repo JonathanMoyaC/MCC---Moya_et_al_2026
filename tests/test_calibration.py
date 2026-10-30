@@ -1,11 +1,18 @@
 import pandas as pd
 
 from ueh_mesa.calibration import (
+    DEFAULT_REGISTRATION_MINUTES,
+    DEFAULT_TRIAGE_MINUTES,
     OBS_ADMISSION_MIN,
     OBS_TRIAGE_MIN,
     _build_attention_by_class,
     select_f3_calibration,
 )
+
+
+def test_operational_duration_assumptions_use_requested_discrete_ranges():
+    assert DEFAULT_REGISTRATION_MINUTES == (0, 1, 2)
+    assert DEFAULT_TRIAGE_MINUTES == (2, 3, 4, 5)
 
 
 def test_f3_frozen_registration_and_triage_vectors_are_present():
