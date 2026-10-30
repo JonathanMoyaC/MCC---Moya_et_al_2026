@@ -70,7 +70,8 @@ st.markdown(
     .brand-title {{ font-size:20px; font-weight:700; line-height:1.2; flex:1; }}
     .brand-school {{ font-size:11px; text-transform:uppercase; letter-spacing:.6px;
       font-weight:700; line-height:1.25; text-align:right; }}
-    .brand-sub {{ color:#1E3A68; font-size:13px; font-weight:650; padding:4px 2px 12px; }}
+    .brand-sub {{ display:flex; justify-content:space-between; gap:12px; color:#1E3A68;
+      font-size:13px; font-weight:650; padding:4px 2px 12px; }}
     div[role="radiogroup"] {{ gap:12px; }}
     div[role="radiogroup"] label {{ background:#fff; border:1px solid #DAE4F0;
       border-radius:10px; padding:8px 18px; color:{NAVY}; font-weight:600; }}
@@ -91,11 +92,12 @@ st.markdown(
     """<div class="brandbar">
       <div class="brand-institution">UCM</div>
       <div class="brand-divider"></div>
-      <div class="brand-title">Simulador de Unidad de Emergencia Hospitalaria HRT</div>
+      <div class="brand-title">Simulación de Urgencias&nbsp; | &nbsp;HRT</div>
       <div class="brand-divider"></div>
       <div class="brand-school">Magíster en Ciencias<br>de la Computación</div>
     </div>
-    <div class="brand-sub">Unidad de Emergencia Hospitalaria · análisis operacional con simulación Mesa</div>""",
+    <div class="brand-sub"><span>Unidad de Emergencia Hospitalaria</span>
+      <span>Simulación para una atención más oportuna y eficiente</span></div>""",
     unsafe_allow_html=True,
 )
 
@@ -395,23 +397,31 @@ def render_kpis(result: dict, reference: pd.DataFrame | None = None):
     indicators = result["indicators"]
     reps = result.get("replication_results", [])
     definitions = {
-        "LOS": ("length_of_stay", "min", "Llegada a salida del simulador. El valor mostrado es la media entre réplicas."),
+        "LOS (horas)": ("length_of_stay", "h", "Llegada a salida del simulador. El valor mostrado es la media entre réplicas."),
         "Door-to-doctor": ("door_to_doctor", "min", "Llegada al inicio de atención médica simulado. No está observado en la base HRT disponible."),
         "Espera triage": ("wait_triage", "min", "Llegada al inicio del triage; no es la duración del triage."),
     }
     columns = st.columns(5)
     for column, (label, (metric, unit, help_text)) in zip(columns[:3], definitions.items()):
         value = indicators[metric].get("mean")
+        display_value = value / 60 if value is not None and metric == "length_of_stay" else value
         ref = None
         if reference is not None and metric in set(reference.metric):
             row = reference.loc[reference.metric.eq(metric)].iloc[0]
             ref = float(row.value)
-            if metric == "length_of_stay" and row.unit == "hours":
-                ref *= 60
+            if metric == "length_of_stay":
+                ref = ref if row.unit == "hours" else ref / 60
         delta = None if ref is None or value is None else f"Referencia: {fmt(ref)} {unit}"
-        column.metric(label, f"{fmt(value)} {unit}" if value is not None else "No disponible", delta=delta, help=help_text)
+        column.metric(label, f"{fmt(display_value)} {unit}" if value is not None else "No disponible", delta=delta, help=help_text)
     columns[3].metric("% abandono", "No disponible", help="El motor Mesa actual no modela abandono; no se calcula ni se imputa.")
-    columns[4].metric("Réplicas", str(result["run"]["replication_count"]), help="Se muestran promedios entre réplicas; el detalle queda en la descarga JSON.")
+    utilization = indicators.get("resource_utilization", {})
+    utilization_values = [float(v) for v in utilization.values() if v is not None]
+    mean_utilization = float(np.mean(utilization_values)) * 100 if utilization_values else None
+    columns[4].metric(
+        "Tasa de utilización",
+        f"{fmt(mean_utilization)}%" if mean_utilization is not None else "No disponible",
+        help="Media aritmética de utilización de los recursos incluidos en el modelo; el detalle por recurso aparece abajo.",
+    )
     if reference is not None:
         st.caption("Los valores de referencia provienen del CSV agregado cargado para el período; revisa las definiciones declaradas.")
 
@@ -501,11 +511,11 @@ def render_empty_dashboard(message: str):
     st.info(message)
     metrics = st.columns(5)
     empty_metrics = (
-        ("LOS", "—", "Se calculará al ejecutar la simulación."),
+        ("LOS (horas)", "—", "Se calculará al ejecutar la simulación."),
         ("Door-to-doctor", "—", "Se calculará como resultado simulado."),
         ("Espera triage", "—", "Se calculará al ejecutar la simulación."),
         ("% abandono", "No disponible", "El motor actual no modela abandono."),
-        ("Utilización", "—", "Se calculará al ejecutar la simulación."),
+        ("Tasa de utilización", "—", "Se calculará al ejecutar la simulación."),
     )
     for column, (label, value, help_text) in zip(metrics, empty_metrics):
         column.metric(label, value, help=help_text)
@@ -663,6 +673,69 @@ if submitted:
                 )
                 st.session_state[f"result_{view}"] = result
                 st.session_state[f"payload_{view}"] = {**base_payload, "replication_count": int(replication_count)}
+            st.session_state.pop("simulation_error", None)
+        except (RuntimeError, ValueError, KeyError) as exc:
+            st.session_state["simulation_error"] = str(exc)
+
+# Populate each analysis view with a real, reproducible Mesa run the first time
+# it is opened in this browser session. No illustrative/example measurements are used.
+base_result_key = f"base_initialized_{view}"
+if not submitted and not st.session_state.get(base_result_key):
+    st.session_state[base_result_key] = True
+    if parsed_period is None:
+        st.session_state["simulation_error"] = "El período inicial debe ser válido y no superar 7 días."
+    else:
+        start_date, horizon_hours = parsed_period
+        base_payload = build_simulation_payload(
+            start_date=start_date,
+            start_hour=0,
+            horizon_hours=horizon_hours,
+            master_seed=master_seed,
+            replication_id=replication_id,
+            severity_probabilities=severity_probabilities,
+            registration_capacity=registration_capacity,
+            triage_capacity=triage_capacity,
+            doctor_capacity=doctor_capacity,
+            box_capacity=box_capacity,
+            demand_multiplier=float(demand_scale),
+        )
+        try:
+            with st.spinner(f"Calculando resultados iniciales para la vista {view.lower()}…"):
+                if view == "Contrafactual":
+                    scenarios = {
+                        "Base (configuración vigente)": (
+                            float(demand_scale), int(doctor_capacity), int(box_capacity)
+                        )
+                    }
+                    for name in selected_scenarios:
+                        multiplier, doctors_delta, boxes_delta = scenario_choices[name]
+                        scenarios[name] = (
+                            float(demand_scale) * multiplier,
+                            max(1, int(doctor_capacity) + doctors_delta),
+                            max(1, int(box_capacity) + boxes_delta),
+                        )
+                    results = {}
+                    for name, (factor, doctors, boxes) in scenarios.items():
+                        payload = {
+                            **base_payload,
+                            "demand_multiplier": factor,
+                            "doctor_capacity": doctors,
+                            "box_capacity": boxes,
+                        }
+                        results[name], _ = run_replicates(
+                            payload, int(replication_count), int(replication_id),
+                            st.empty(), 0, int(replication_count),
+                        )
+                    st.session_state["contrast_results"] = results
+                else:
+                    result, _ = run_replicates(
+                        base_payload, int(replication_count), int(replication_id),
+                        st.empty(), 0, int(replication_count),
+                    )
+                    st.session_state[f"result_{view}"] = result
+                    st.session_state[f"payload_{view}"] = {
+                        **base_payload, "replication_count": int(replication_count)
+                    }
             st.session_state.pop("simulation_error", None)
         except (RuntimeError, ValueError, KeyError) as exc:
             st.session_state["simulation_error"] = str(exc)
