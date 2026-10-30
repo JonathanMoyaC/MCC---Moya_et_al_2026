@@ -505,6 +505,14 @@ def show_run_metadata(result: dict):
         f"Capacidades: admisión {run['capacities']['registration']}, triage {run['capacities']['triage']}, "
         f"médicos {run['capacities']['doctors']}, box {run['capacities']['boxes']}"
     )
+    service_times = run.get("service_time_settings", {})
+    if service_times:
+        st.caption(
+            f"Duración asumida: admisión {service_times['registration_min_minutes']}–"
+            f"{service_times['registration_max_minutes']} min; triage "
+            f"{service_times['triage_min_minutes']}–{service_times['triage_max_minutes']} min. "
+            "Rangos discretos uniformes, definidos como supuestos exploratorios."
+        )
 
 
 def render_empty_dashboard(message: str):
