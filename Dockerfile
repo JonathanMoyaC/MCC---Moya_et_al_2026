@@ -16,6 +16,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock README.md ./
 COPY src/ ./src/
 COPY fase2_profiles/ ./fase2_profiles/
+COPY .streamlit/ ./.streamlit/
 COPY app.py ./
 
 RUN uv sync --locked --no-dev --extra api --extra web --no-editable \
