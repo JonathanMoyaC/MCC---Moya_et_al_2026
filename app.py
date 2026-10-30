@@ -103,7 +103,7 @@ if view == "Contrafactual":
 
 with st.sidebar:
     st.header("Parámetros de simulación")
-    st.caption("Fuente disponible: perfil histórico agregado 2016–2018.")
+    st.caption("Demanda histórica agrupada · 2016–2018")
     with st.form("simulation_config", clear_on_submit=False):
         if view == "Predictivo":
             today = date.today()
@@ -117,33 +117,30 @@ with st.sidebar:
             max_value=date(2035, 12, 31),
             key=f"period_{view}",
         )
-        st.selectbox(
-            "Demanda",
-            ["Perfil histórico agrupado (2016–2018)"],
-            help="El motor genera llegadas sintéticas desde tasas agregadas por mes, tipo de día y hora.",
-        )
         demand_scale = st.slider(
-            "Multiplicador de demanda",
+            "Variación de demanda",
             min_value=0.5,
             max_value=2.0,
             value=1.0,
             step=0.05,
-            help="Factor aplicado a la tasa horaria histórica agrupada. 1,00 conserva la tasa base.",
+            format="%.2fx",
+            help="Multiplica la tasa horaria histórica agrupada. 1,00x conserva la demanda base.",
         )
         st.subheader("Capacidad")
         registration_capacity = st.number_input("Admisión", min_value=1, max_value=50, value=2, step=1)
         triage_capacity = st.number_input("Enfermería / puestos de triage", min_value=1, max_value=50, value=1, step=1)
         doctor_capacity = st.number_input("Médicos", min_value=1, max_value=200, value=12, step=1)
         box_capacity = st.number_input("Box", min_value=1, max_value=300, value=18, step=1)
-        st.subheader("Reproducibilidad")
-        master_seed = st.number_input("Semilla maestra", min_value=0, max_value=2_147_483_647, value=20260730, step=1)
-        replication_id = st.number_input("Primera réplica", min_value=0, max_value=2_147_483_637, value=0, step=1)
-        replication_count = st.number_input("Número de réplicas", min_value=1, max_value=10, value=3, step=1)
-        severity_probabilities = st.selectbox(
-            "Perfil de severidad",
-            options=["smoothed", "raw"],
-            format_func=lambda value: "Suavizado" if value == "smoothed" else "Bruto",
-        )
+        with st.expander("Opciones avanzadas", expanded=False):
+            st.caption("Reproducibilidad y perfil agregado de severidad")
+            master_seed = st.number_input("Semilla maestra", min_value=0, max_value=2_147_483_647, value=20260730, step=1)
+            replication_id = st.number_input("Primera réplica", min_value=0, max_value=2_147_483_637, value=0, step=1)
+            replication_count = st.number_input("Número de réplicas", min_value=1, max_value=10, value=3, step=1)
+            severity_probabilities = st.selectbox(
+                "Perfil de severidad",
+                options=["smoothed", "raw"],
+                format_func=lambda value: "Suavizado" if value == "smoothed" else "Bruto",
+            )
         submitted = st.form_submit_button("Ejecutar simulación", type="primary", use_container_width=True)
     st.caption(f"API: `{api_base_url}` · Motor: Mesa")
 
