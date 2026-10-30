@@ -26,12 +26,43 @@ PALE = "#F3F7FC"
 ESI_COLORS = {"C1": "#EF4444", "C2": "#F28C28", "C3": "#FACC15", "C4": "#79C96B", "C5": "#078A58"}
 ESI = ["C1", "C2", "C3", "C4", "C5"]
 
+
+@alt.theme.register("ueh_light", enable=True)
+def _ueh_chart_theme() -> alt.theme.ThemeConfig:
+    """Keep Vega-Lite charts readable even when the browser prefers dark mode."""
+    return alt.theme.ThemeConfig(
+        {
+            "background": "#FFFFFF",
+            "view": {"stroke": "#DFE7F1"},
+            "axis": {
+                "labelColor": NAVY,
+                "titleColor": NAVY,
+                "domainColor": "#AAB9CC",
+                "tickColor": "#AAB9CC",
+                "gridColor": "#E7EDF5",
+            },
+            "legend": {"labelColor": NAVY, "titleColor": NAVY},
+            "title": {"color": NAVY},
+            "header": {"labelColor": NAVY, "titleColor": NAVY},
+        }
+    )
+
 st.markdown(
     f"""<style>
     :root {{ --ueh-navy:{NAVY}; --ueh-blue:{BLUE}; --ueh-cyan:{CYAN}; }}
-    .stApp {{ background: {PALE}; }}
+    .stApp {{ background: {PALE}; color:{NAVY}; color-scheme:light; }}
+    [data-testid="stAppViewContainer"], [data-testid="stSidebar"] {{ color:{NAVY}; }}
+    [data-testid="stMarkdownContainer"], [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] h1, [data-testid="stMarkdownContainer"] h2,
+    [data-testid="stMarkdownContainer"] h3, [data-testid="stMarkdownContainer"] h4,
+    [data-testid="stMarkdownContainer"] h5, [data-testid="stMarkdownContainer"] h6,
+    [data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] p,
+    [data-testid="stCaptionContainer"], [data-testid="stText"],
+    [data-testid="stSidebar"] label {{ color:{NAVY}; }}
     [data-testid="stHeader"] {{ background: transparent; }}
     [data-testid="stSidebar"] {{ background:#fff; border-right:1px solid #D8E2F0; }}
+    [data-testid="stSidebar"] [data-baseweb="input"] input,
+    [data-testid="stSidebar"] [data-baseweb="select"] {{ color:{NAVY}; }}
     .brandbar {{ display:flex; align-items:center; gap:16px; background:#073B83;
       color:white; padding:12px 20px; border-radius:12px; margin:0 0 8px 0; }}
     .brand-institution {{ font-weight:800; font-size:24px; color:#14C4F4; letter-spacing:.4px; }}
@@ -48,6 +79,7 @@ st.markdown(
       padding:14px 16px; border-radius:12px; box-shadow:0 1px 2px #0b2c660d; }}
     div[data-testid="stMetricLabel"] {{ color:{NAVY}; }}
     div[data-testid="stMetricValue"] {{ color:{BLUE}; }}
+    [data-testid="stFormSubmitButton"] button {{ color:#fff; }}
     .section-card {{ background:white; border:1px solid #DFE7F1; border-radius:12px;
       padding:14px 16px; }}
     .note {{ color:#536780; font-size:13px; }}
