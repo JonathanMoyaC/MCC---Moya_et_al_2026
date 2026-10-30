@@ -149,6 +149,15 @@ class SimulationService:
             "replication_id": request.replication_id,
             "capacities": capacities,
             "synthetic_patient_count": generation["synthetic_patient_count"],
+            "service_time_settings": {
+                "registration_min_minutes": 0,
+                "registration_max_minutes": 2,
+                "registration_distribution": "discrete_uniform_assumption",
+                "triage_min_minutes": 2,
+                "triage_max_minutes": 5,
+                "triage_distribution": "discrete_uniform_assumption",
+                "attention_source": "F3.1/H.1-R6 empirical calibration cache",
+            },
         }
 
     @staticmethod
@@ -161,6 +170,8 @@ class SimulationService:
             "esi_model_applied": False,
             "arrival_count_assumption": "Poisson per comparable calendar-day hour",
             "within_hour_arrival_assumption": "Uniform over integer minutes 0-59",
-            "service_duration_source": "F3.1/H.1-R6 empirical calibration cache",
+            "service_duration_source": "Discrete uniform assumptions for registration (0-2 min) and triage (2-5 min); attention durations from F3.1/H.1-R6 empirical cache",
+            "registration_duration_assumption": "0-2 integer minutes, discrete uniform; exploratory, not empirically validated",
+            "triage_duration_assumption": "2-5 integer minutes, discrete uniform; exploratory, not empirically validated",
             "indicators_are_simulated": True,
         }
