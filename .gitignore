@@ -17,3 +17,6 @@ fase2_profiles/*.csv
 /validation/
 *.egg-info/
 /Moya_et_al_2026
+
+/calibration_audit_F1_R1_v2.json
+/fase2_profiles/source_aggregate_counts.json
