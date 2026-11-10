@@ -26,6 +26,7 @@ class SimulationRunBody(BaseModel):
     master_seed: int = Field(default=42, ge=0)
     replication_id: int = Field(default=0, ge=0)
     severity_probabilities: Literal["raw", "smoothed"] = "smoothed"
+    demand_multiplier: float = Field(default=1.0, ge=0.1, le=3.0)
     registration_capacity: int = Field(default=2, ge=1, le=50)
     triage_capacity: int = Field(default=1, ge=1, le=50)
     doctor_capacity: int = Field(default=12, ge=1, le=200)

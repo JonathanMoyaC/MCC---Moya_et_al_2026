@@ -50,6 +50,17 @@ def test_service_handles_a_zero_arrival_horizon_without_calling_empty_mesa_cohor
     assert result["indicators"]["length_of_stay"]["mean"] is None
 
 
+def test_service_applies_demand_multiplier_and_returns_hourly_aggregates():
+    service = SimulationService(profile(40), calibration())
+    result = service.run(SimulationRequest(
+        start=datetime(2018, 1, 1), horizon_hours=1, master_seed=9, demand_multiplier=1.25
+    ))
+    assert result["run"]["demand_multiplier"] == 1.25
+    assert result["method"]["demand_multiplier"] == 1.25
+    assert result["demand"]["hourly_arrivals"][0]["expected_arrivals"] == 50
+    assert isinstance(result["demand"]["hourly_arrivals"][0]["arrivals"], int)
+
+
 def test_service_is_reproducible_for_same_seed_and_varies_with_new_seed():
     service = SimulationService(profile(40), calibration())
     base = dict(start=datetime(2018, 1, 1), horizon_hours=1, master_seed=9)
