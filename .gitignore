@@ -27,3 +27,11 @@ fase2_profiles/*.csv
 
 /validation/triage_time_staffing_sensitivity/adult_service_samples.json
 !/validation/triage_time_staffing_sensitivity/run_triage_time_sensitivity.py
+
+/calibration_audit_F1_R1_v2.json
+/fase2_profiles/source_aggregate_counts.json
+/validation/triage_time_staffing_sensitivity/absolute_process_estimands.csv
+/validation/triage_time_staffing_sensitivity/classification_transition_estimands.csv
+/validation/triage_time_staffing_sensitivity/paired_priority_effect_estimands.csv
+/validation/triage_time_staffing_sensitivity/experiment_manifest.json
+/validation/triage_time_staffing_sensitivity/README.md
