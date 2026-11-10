@@ -7,6 +7,7 @@ The original cache is never copied into this package.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from hashlib import sha256
 from pathlib import Path
 import pickle
@@ -278,3 +279,77 @@ class EmpiricalInputModel:
             attention_by_class=by_class,
             metadata=metadata,
         )
+
+
+EXPECTED_ADULT_SERVICE_SAMPLES_SHA256 = "340f27d51b7638ab105b65708a98757141eacf4c1094fea23f46cbd796ae94c5"
+
+
+def with_adult_triage_samples(
+    calibration: EmpiricalInputModel,
+    path: str | Path,
+    *,
+    expected_sha256: str | None = EXPECTED_ADULT_SERVICE_SAMPLES_SHA256,
+) -> EmpiricalInputModel:
+    """Use the frozen adult-only triage and attention inputs for sensitivity runs.
+
+    Registration is a deterministic one-minute placeholder unless overridden
+    per simulation request; the 17 registration-to-triage intervals are not
+    treated as verified registration service durations. Attention vectors come
+    from the same adult-filtered 2017 preparation used by the H6 experiment,
+    rather than the broader pre-adult-filter F3 cache vectors.
+    """
+    samples_path = Path(path)
+    if not samples_path.is_file():
+        raise FileNotFoundError(samples_path)
+    digest = _cache_sha256(samples_path)
+    if expected_sha256 is not None and digest != expected_sha256:
+        raise ValueError(f"La muestra externa de triage no coincide con el SHA-256 esperado: {digest}")
+    payload = json.loads(samples_path.read_text(encoding="utf-8"))
+    if payload.get("schema_version") != "adult-service-samples-v1":
+        raise ValueError("Versión de esquema no válida para las muestras de servicio")
+    if payload.get("population") != "confirmed age >=18 years only":
+        raise ValueError("Las muestras externas deben corresponder solo a adultos confirmados")
+    registration_observations = tuple(float(value) for value in payload.get("registration_minutes", ()))
+    if len(registration_observations) != 17 or any(
+        not 1 <= value <= 720 for value in registration_observations
+    ):
+        raise ValueError("Se esperan los 17 intervalos de admisión–triage auditados; no se usan como servicio")
+    triage_values = tuple(sorted(float(value) for value in payload.get("triage_minutes", ())))
+    if len(triage_values) != 38 or any(not 1 <= value <= 720 for value in triage_values):
+        raise ValueError("Se requieren las 38 mediciones adultas de triage dentro de 1–720 min")
+    attention_global = tuple(sorted(float(value) for value in payload.get("attention_global_minutes", ())))
+    if len(attention_global) != 457 or any(not 1 <= value <= 720 for value in attention_global):
+        raise ValueError("Se requieren las 457 duraciones adultas de atención de 2017 dentro de 1–720 min")
+    raw_by_class = payload.get("attention_by_class_minutes", {})
+    if not isinstance(raw_by_class, dict):
+        raise ValueError("Las duraciones de atención por categoría deben ser un objeto")
+    attention_by_class = {
+        str(category): tuple(sorted(float(value) for value in values))
+        for category, values in raw_by_class.items()
+    }
+    expected_class_counts = {"C2": 200, "C3": 220, "C4": 29}
+    if set(attention_by_class) != set(expected_class_counts) or any(
+        len(attention_by_class[category]) != expected_count
+        or any(not 1 <= value <= 720 for value in attention_by_class[category])
+        for category, expected_count in expected_class_counts.items()
+    ):
+        raise ValueError("Se requieren duraciones adultas de atención para C2=200, C3=220 y C4=29")
+    metadata = {
+        **calibration.metadata,
+        "registration_service_source": "fixed one-minute placeholder; unvalidated; 17 admission-to-triage intervals are not used as service times",
+        "registration_interval_observation_count_not_used": len(registration_observations),
+        "triage_service_source": "adult-only in-situ measurements, 2025; external exploratory input",
+        "triage_service_measurement_year": payload.get("triage_measurement_year"),
+        "triage_service_sample_count": len(triage_values),
+        "attention_service_source": "adult-only 2017 calibration vectors frozen for H6 triage sensitivity experiment",
+        "attention_service_sample_count": len(attention_global),
+        "attention_service_class_counts": {category: len(values) for category, values in attention_by_class.items()},
+        "adult_service_samples_sha256": digest,
+    }
+    return EmpiricalInputModel(
+        registration=(1.0,),
+        triage=triage_values,
+        attention_global=attention_global,
+        attention_by_class=attention_by_class,
+        metadata=metadata,
+    )

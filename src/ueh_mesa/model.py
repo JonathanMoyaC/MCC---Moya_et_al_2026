@@ -23,6 +23,7 @@ class ModelConfig:
     doctor_capacity: int = 12
     box_capacity: int = 18
     registration_factor: float = 1.0
+    registration_service_minutes: int | None = None
     triage_factor: float = 1.0
     attention_factor: float = 1.0
     attention_factor_critical: float = 1.0
@@ -45,6 +46,8 @@ class ModelConfig:
             raise ValueError("doctor_occupancy_fraction debe estar en (0, 1]")
         if not 0 < self.box_occupancy_fraction <= 1:
             raise ValueError("box_occupancy_fraction debe estar en (0, 1]")
+        if self.registration_service_minutes is not None and not 0 <= self.registration_service_minutes <= 2:
+            raise ValueError("registration_service_minutes debe estar entre 0 y 2 min")
         if self.box_release_delay_min < 0:
             raise ValueError("box_release_delay_min no puede ser negativo")
 
@@ -236,10 +239,19 @@ class EmergencyDepartmentModelMesa(Model):
         free = capacity - len(self._active[stage])
         while free > 0 and self.queues[stage]:
             patient = self.queues[stage].pop(0)
-            duration = self._sample_minutes(patient, stage)
+            if stage == "registration" and self.config.registration_service_minutes is not None:
+                duration = self.config.registration_service_minutes
+            else:
+                duration = self._sample_minutes(patient, stage)
             if stage == "registration":
                 patient.registration_start = self.clock_minute
                 patient.state = "registration"
+                if duration == 0:
+                    patient.registration_end = self.clock_minute
+                    patient.state = "waiting_triage"
+                    patient.queue_entry_minute = self.clock_minute
+                    self.queues["triage"].append(patient)
+                    continue
             else:
                 patient.triage_start = self.clock_minute
                 patient.state = "triage"
@@ -326,6 +338,10 @@ class EmergencyDepartmentModelMesa(Model):
             "doctor_release": patient.doctor_release,
             "box_release": patient.box_release,
             "departure": patient.departure,
+            "registration_queue_wait_sim": patient.registration_start - patient.arrival_minute,
+            "registration_time_sim": patient.registration_end - patient.registration_start,
+            "triage_queue_wait_sim": patient.triage_start - patient.registration_end,
+            "triage_time_sim": patient.triage_end - patient.triage_start,
             "wait_triage_sim": patient.triage_start - patient.arrival_minute,
             "wait_attention_sim": patient.attention_start - patient.triage_end,
             "door2doctor_sim": patient.attention_start - patient.arrival_minute,
@@ -357,3 +373,4 @@ class EmergencyDepartmentModelMesa(Model):
         while self.running:
             self.step()
         return self.patient_results, self.minute_results
+
